@@ -1,0 +1,1 @@
+move this whole folder to usr/orcd/scratch/{intermediate directories of your choice}/DIIID_shots/DIIID_180403.04400_n2.8Npara_1MW_frameworkTest

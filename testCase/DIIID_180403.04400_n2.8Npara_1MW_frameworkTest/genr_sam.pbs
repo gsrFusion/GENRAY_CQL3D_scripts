@@ -1,0 +1,10 @@
+#!/bin/sh
+#SBATCH -N 1
+#SBATCH -n 32
+#SBATCH -t 00:30:00
+#SBATCH -p sched_mit_psfc
+#SBATCH -J GENRAY
+#SBATCH --exclude=node[500,588,590]
+
+mpirun /home/grantr/codes/samGenray/xgenray_mpi_intel.engaging
+

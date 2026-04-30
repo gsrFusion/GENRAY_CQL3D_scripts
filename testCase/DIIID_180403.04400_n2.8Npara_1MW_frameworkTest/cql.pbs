@@ -1,0 +1,10 @@
+#!/bin/sh
+#SBATCH -N 10
+#SBATCH -n 10
+#SBATCH --mem 125000
+#SBATCH -t 00:20:00
+#SBATCH -p sched_mit_psfc
+#SBATCH -J CQL3D
+#SBATCH --exclude=node[500,588,590]
+
+mpirun /home/grantr/codes/cql3d/xcql3d_mpi.intel.engaging
