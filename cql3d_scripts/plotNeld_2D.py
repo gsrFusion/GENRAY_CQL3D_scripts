@@ -1,7 +1,5 @@
 """
-Plots the n_para at which significant electron landau damping occurs
-This code can take up to ~30s to run. There's probably a better way to do this plotting than I came up with
-This method does not do a great job of plotting near the xpoints since the flux surfaces are quite far apart there
+Produces a 2D plot of N_ELD = 5.33/sqrt(Te)
 """
 
 import numpy as np
@@ -37,15 +35,19 @@ zgrid = gfileDict["zgrid"]
 magAxisR = gfileDict['rmaxis'] 
 magAxisZ = gfileDict['zmaxis'] 
 
+xlim = gfileDict["xlim"] #R points of the wall
+ylim = gfileDict["ylim"] #Z points of the wall
+
 #relevant variables to find the normalized poloidal flux
 psirz = gfileDict["psirz"]
 psi_mag_axis = gfileDict["ssimag"]
 psi_boundary = gfileDict["ssibdry"]
-    
+
 psirzNorm = (psirz - psi_mag_axis)/(psi_boundary-psi_mag_axis)
 #interpolated function for poloidal flux
 psirzNormFunc = interp2d(rgrid, zgrid, psirzNorm.T)
 
+#interpolating to make a higher resolution mesh
 rInterp = np.linspace(np.min(rgrid), np.max(rgrid), 200)
 zInterp = np.linspace(np.min(zgrid), np.max(zgrid), 200)#we need to restrict the Z so that it plots flux surfaces inside the LCFS and not in the divertor
 psi_NrzInterp = interp2d(rgrid,zgrid, psirzNorm, kind = 'linear')(rInterp, zInterp)
@@ -55,7 +57,7 @@ ryain, Tein = helper.getCQLTe()
 TeInterpFunc = interp1d(ryain, Tein, kind = 'linear', bounds_error = False, fill_value = np.nan)
 Tes = TeInterpFunc(np.sqrt(psi_NrzInterp))
 
-dampingNs = 6.4/np.sqrt(Tes)
+dampingNs = 5.44/np.sqrt(Tes)
 
 fig,ax = plt.subplots(figsize = (5.25,6.5))
 
@@ -70,4 +72,9 @@ ax.set_aspect('equal')
 ax.set_ylabel('Z (m)', labelpad = -10)
 ax.set_xlabel('R (m)')
 ax.set_title(f'Shot {shotNum}')
+
+ax.plot(xlim, ylim, color = 'grey', lw = 3)#plot wall
+ax.set_ylim(min(ylim)-.05, max(ylim)+.05)
+ax.set_xlim(min(xlim)-.05, max(xlim)+.05)
+
 plt.show()

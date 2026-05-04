@@ -1,5 +1,5 @@
 """
-Plots the minimum propagating n_para according to the accessibility condition inside the LCFS
+Produces a 2D plot of N_acc = w_pe/W_e + sqrt(1 - w_pi^2/w^2 + w_pe^2/W_e^2)
 """
 
 import numpy as np
@@ -35,6 +35,9 @@ B_zGrid = gfileDict["bzrz"]
 B_TGrid = gfileDict["btrz"]
 B_rGrid = gfileDict["brrz"]
 
+xlim = gfileDict["xlim"] #R points of the wall
+ylim = gfileDict["ylim"] #Z points of the wall
+
 #relevant variables to find the normalized poloidal flux
 psirz = gfileDict["psirz"]
 psi_mag_axis = gfileDict["ssimag"]
@@ -44,6 +47,7 @@ psirzNorm = (psirz - psi_mag_axis)/(psi_boundary-psi_mag_axis)
 #interpolated function for poloidal flux
 psirzNormFunc = interp2d(rgrid, zgrid, psirzNorm.T)
 
+#interpolating to make a higher resolution mesh
 rInterp = np.linspace(np.min(rgrid), np.max(rgrid), 200)
 zInterp = np.linspace(np.min(zgrid), np.max(zgrid), 200)
 psi_NrzInterp = interp2d(rgrid,zgrid, psirzNorm, kind = 'linear')(rInterp, zInterp)
@@ -85,4 +89,9 @@ ax.set_aspect('equal')
 ax.set_ylabel('Z (m)', labelpad = -10)
 ax.set_xlabel('R (m)')
 ax.set_title(f'Shot {shotNum}')
+
+ax.plot(xlim, ylim, color = 'grey', lw = 3)#plot wall
+ax.set_ylim(min(ylim)-.05, max(ylim)+.05)
+ax.set_xlim(min(xlim)-.05, max(xlim)+.05)
+
 plt.show()

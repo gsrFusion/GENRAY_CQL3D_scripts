@@ -1,3 +1,7 @@
+"""
+Useful script for plotting a given quantity along a ray
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d

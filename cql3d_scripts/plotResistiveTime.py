@@ -1,3 +1,6 @@
+"""
+Plots the slab resistive diffusion time of mu_0 *a^2/eta(rho_pol) vs rho_pol
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import netCDF4
@@ -74,8 +77,6 @@ eps_0 = 8.854e-12
 eta_spi = (4*np.sqrt(2*np.pi)/3)*(Zeff*e**2 *np.sqrt(m_e)*coLo)/((4*np.pi*eps_0)**2 * (T_e*1.602e-16)**(3/2))
 
 eta_spi *= (1+1.198*Zeff+0.222*Zeff**2)/(1+2.966*Zeff+.753*Zeff**2)
-
-print(f'eta_spi[0], eta_neo[0]: {eta_spi[0], eta_neo[0]}')
 
 mu_0 = 4*np.pi*1e-7
 rs = geqdsk['fluxSurfaces']['avg']['a']

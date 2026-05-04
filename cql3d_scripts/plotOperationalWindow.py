@@ -1,5 +1,6 @@
 ###
 # Plots the operational window between N_||,acc and N_||,ELD in which the slow LH wave can propagate
+# x-axis is the major radius
 # this calculation is done at the midplane and spans from the HFS to the LFS
 ###
 
@@ -12,8 +13,9 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 import getInputFileDictionary
-cqlInputFileDict = getInputFileDictionary.getInputFileDictionary('cql3d')
 import getGfileDict
+import helperFunctions as helper
+
 gfileDict = getGfileDict.getGfileDict()
 
 m_e = 9.109e-31 #electron mass
@@ -28,7 +30,7 @@ def getW2_pD(n):#deuteron plasma frequency squared
 def getW_ce(B):#electron cyclotron frequency
     return -q*B/m_e
 
-#returns the accessibility criterion
+#returns the (approximate) accessibility criterion
 def getAccess(n, B):
     w2_pD = getW2_pD(n); w2_pe = getW2_pe(n); w_ce = getW_ce(B)
     w = 4.6e9*2*np.pi #wave's angular frequency
@@ -57,17 +59,11 @@ psirzNorm = (psirz - psi_mag_axis)/(psi_boundary-psi_mag_axis)
 #interpolated function for poloidal flux
 psirzNormFunc = RectBivariateSpline(zgrid,rgrid,psirzNorm)
 
-ryain = cqlInputFileDict["setup"]["ryain"]
-Tes = cqlInputFileDict["setup"]["tein"]
-ns = cqlInputFileDict["setup"]["enein(1,1)"]*1e6
+ryain, Tes = helper.getCQLTe()
+ryain, nes = helper.getCQLne()
 
-tescal = 1
-try:
-    tescal = cqlInputFileDict["setup"]["tescal"]
-except:
-    pass
-TeInterpFunc = interp1d(ryain**2, Tes*tescal, kind = 'cubic')
-neInterpFunc = interp1d(ryain**2, ns, kind = 'cubic')
+TeInterpFunc = interp1d(ryain**2, Tes, kind = 'cubic')
+neInterpFunc = interp1d(ryain**2, nes, kind = 'cubic')
 
 psiMidplane = psirzNormFunc(magAxisZ,R_insideLCFS).flatten()
 
@@ -78,9 +74,8 @@ plt.rc('figure', titlesize = 16)
 plt.rc('legend',fontsize=20)
 plt.rcParams['axes.ymargin'] = 0
 plt.rcParams['axes.xmargin'] = 0
-#plt.rcParams['figure.dpi'] = 200
 
-dampingCond = 5.8/np.sqrt(TeInterpFunc(psiMidplane))
+dampingCond = 5.33/np.sqrt(TeInterpFunc(psiMidplane))
 accessCond = getAccess(neInterpFunc(psiMidplane), B_mid_insideLCFS)
 print(f'min of damping condition: {np.min(dampingCond)}')
 fig, ax = plt.subplots(figsize = (5.25*1.4,2.5*1.4))
@@ -95,11 +90,8 @@ ax.fill_between(R_insideLCFS,accessCond,dampingCond,color = 'forestgreen')
 
 ax.fill_between(R_insideLCFS,accessCond,np.min(accessCond),color = 'w')
 ax.fill_between(R_insideLCFS,dampingCond,np.max(dampingCond),color = 'w')
-#"""
-#ax.text(1.07, 0.8, 'HFS', fontsize = 16)
-#ax.text(2.2, 0.8, 'LFS',  fontsize = 16)
 
-upperPlottingLim = 3#6
+upperPlottingLim = 6
 """
 midR = (np.max(R_insideLCFS) + np.min(R_insideLCFS))/2 + .05
 inaccessZTop = .3/(2.5*1.4) * upperPlottingLim + np.min(accessCond)

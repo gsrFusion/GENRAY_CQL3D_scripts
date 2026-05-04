@@ -1,3 +1,8 @@
+"""
+Plots the propagation domain for the LH waves.
+I have found this not overly useful and the below code is rather deprecated
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d, interp2d, RectBivariateSpline

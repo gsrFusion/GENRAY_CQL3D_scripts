@@ -84,14 +84,14 @@ def plotRays(toroidal = False, poloidal = True):
         added = ax_pol.add_collection(lc)
 
     #"""
-    avgSPA = helper.getSPA(cqlrf_nc, genray_in, lobes = [1])
-    avg2PA = helper.getNPA(cqlrf_nc, genray_in, 2,lobes = [1])
-    print(f'average SPA of the forward lobe: {avgSPA}, avg2PA: {avg2PA}')
-
+    avgSPA_allLobes, onePassDelpwr, initialDelPwr = helper.getSPA(targetDir)
+    avgSPA_forwardLobe = avgSPA_allLobes[0]
+    
+    print(f'SPA for each lobe: {avgSPA_allLobes}')
+    print(genray_in)
     N_para_launch = (genray_in['grill']['anmax(1)'] + genray_in['grill']['anmin(1)'])/2
-    denscale = genray_in['plasma']['den_scale(1)']
 
-    ax_pol.set_title(r'N$_{\parallel, LCFS}$ = ' + f'{N_para_launch:.2f}\n'+r'SPA$_{forward}$ = ' + f'{avgSPA:.3f}')#, Shot {shotNum}')
+    ax_pol.set_title(r'N$_{\parallel, LCFS}$ = ' + f'{N_para_launch:.2f}\n'+r'SPA$_{forward}$ = ' + f'{avgSPA_forwardLobe:.3f}')#, Shot {shotNum}')
     ax_pol.set_aspect('equal')
     if machine != 'FENIX':
         ax_pol.set_ylim(min(ylim)*1.05, max(ylim)*1.05)

@@ -1,5 +1,6 @@
 """
-Plots which root the wave is on
+Plots whether the ray(s) are on the fast or slow branch
+Options are to plot the N|| evolution and/or a poloidal ray trace
 ONLY WORKS IF ID = 2
 """
 import numpy as np
@@ -53,6 +54,7 @@ e = 1.6e-19
 c = 3e8
 w = 2*np.pi*4.6e9
 
+#STIX coefficients
 def getSDP(n, B):
     w_ce = -e*B/m_e
     w_cD = e*B/m_D
@@ -67,7 +69,9 @@ def getSDP(n, B):
 
 #determines which branch the waves is on by comparing the fast and slow solutions for N_perp^2 assuming a cold plasma
 #to the N_perp^2 predicted by GENRAY. This therefore only works for cold plasma in GENRAY
-#then plots either the ray trace (good for n>=1 rays) or the N_|| evolution (really only good for a single ray)
+#then plots either the ray trace (good for one or more rays) or the N_|| evolution (only readable for a single ray)
+#plotEvolution -> N|| evo
+#plotRayTrace -> raytrace
 def getWhichRootPlots(plotEvolution = False, plotRayTrace = False):
     nparas = np.copy(genray_nc.variables["wnpar"]) #n_|| of the ray at each point along the ray trace
     nperps = np.copy(genray_nc.variables["wnper"]) #n_perp of the ray at each point along the ray trace
@@ -108,6 +112,7 @@ def getWhichRootPlots(plotEvolution = False, plotRayTrace = False):
         axTrace.set_ylabel("z (m)")
         axTrace.set_xlabel("R (m)")
 
+        #fake curves for legend
         axTrace.plot([-100], [-100], label = 'Fast Wave', lw = 2, color = 'r')
         axTrace.plot([-100], [-100], label = 'Slow Wave', lw = 2, color = 'b')
 
@@ -131,10 +136,6 @@ def getWhichRootPlots(plotEvolution = False, plotRayTrace = False):
     norm = plt.Normalize(0, 1)
     minRatioToPlot = .05#.1 #when the ratio of ray power to ray starting power is below this number, the trace ends
     for i in range(len(nparas)):
-
-        if i is not 19:
-            continue
-
         npara = nparas[i]
         nperp = nperps[i]
         
@@ -169,6 +170,7 @@ def getWhichRootPlots(plotEvolution = False, plotRayTrace = False):
         distToSlow = np.abs(np.abs(nperp) - slowNperp)
         
         slowOrFast = np.zeros(len(npara))#zero where the wave is slow
+        #if the nperp is closer to that of the fast branch, flip the relevant value to 1
         slowOrFast[distToFast < distToSlow] = 1
 
         if plotRayTrace:
@@ -184,13 +186,14 @@ def getWhichRootPlots(plotEvolution = False, plotRayTrace = False):
             figTrace.tight_layout()
 
         if plotEvolution:
-            
-            #axEvo.plot(radialVariable[i][:mostPowerDep], np.sign(npara[0])*N_acc[:mostPowerDep], label = r'$N_{||, acc}$', lw = 4, color ='tab:green', linestyle = 'dotted')
-            #points = np.array([radialVariable[i][:mostPowerDep],(np.sign(npara[0]))*npara[:mostPowerDep]]).T.reshape(-1, 1, 2)
+            #choose which ray to plot
+            #There's not a great way to know which ray number is useful to look at besides guess and check
+            if i is not 19:
+                continue
+
             rho_pols = radialVariable[i]
-            #axEvo.plot(rho_pols[:mostPowerDep], np.sign(npara[0])*N_acc[:mostPowerDep], label = r'$N_{||, acc}$', lw = 4, color ='tab:green', linestyle = 'dotted')
-            #points = np.array([rho_pols[:mostPowerDep],npara[:mostPowerDep]]).T.reshape(-1, 1, 2)
-            points = np.array([rho_pols[:mostPowerDep],nperp[:mostPowerDep]]).T.reshape(-1, 1, 2)
+            axEvo.plot(rho_pols[:mostPowerDep], np.sign(npara[0])*N_acc[:mostPowerDep], label = r'$N_{||, acc}$', lw = 4, color ='tab:green', linestyle = 'dotted')
+            points = np.array([rho_pols[:mostPowerDep],npara[:mostPowerDep]]).T.reshape(-1, 1, 2)
             segments = np.concatenate([points[:-1], points[1:]], axis=1)
             # Create a continuous norm to map from data points to colors
             lc = LineCollection(segments, norm = norm,cmap=plt.cm.bwr)
@@ -200,10 +203,6 @@ def getWhichRootPlots(plotEvolution = False, plotRayTrace = False):
             axEvo.add_collection(lc)
             axEvo.legend(loc = 'lower left')
 
-            axEvo.set_xlim([.76,1])
-            axEvo.set_ylim([0,35])
-
-            """
             if nparas[0,0] > 0:
                 axEvo.set_ylim([0,5])
             else:
@@ -212,7 +211,6 @@ def getWhichRootPlots(plotEvolution = False, plotRayTrace = False):
             axEvo.set_yticks([-2.4,-2.5,-2.6,-2.7])
 
             axEvo.text(.866,-2.495, 'Propagation', rotation = -20, fontsize = 14, ha='center', va='center')
-            #axEvo.text(.813,-2.33, 'LFS', rotation = 0, fontsize = 14)
             axEvo.text(.871,-2.419, 'HFS', rotation = 0, fontsize = 14, ha='center', va='center')
 
             arrowStarts = [(.8565, -2.472), (.8312,-2.5215), (.859,-2.6068), (.866,-2.429)]
@@ -237,11 +235,8 @@ def getWhichRootPlots(plotEvolution = False, plotRayTrace = False):
                                         capstyle='butt'  
                                         )
                         )
-            """
             figEvo.tight_layout()
-
-    plt.savefig('180403_whichRoot_nperp.jpeg',dpi=300)
 
     plt.show()
 
-getWhichRootPlots(plotEvolution=True, plotRayTrace=False)
+getWhichRootPlots(plotEvolution=False, plotRayTrace=True)

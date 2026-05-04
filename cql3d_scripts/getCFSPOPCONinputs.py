@@ -1,5 +1,6 @@
 ###
-# Plots the electron and ion densities and temperatures according to the cql3d input file
+# Outputs several of the quantities needed for CFSpopcons
+# Many of these values of useful for other tasks as well
 ###
 
 import os, sys
@@ -7,51 +8,28 @@ import os, sys
 abspath = os.path.abspath(__file__);dname = os.path.dirname(abspath);os.chdir(dname)
 currentdir = os.path.dirname(os.path.realpath(__file__));parentdir = os.path.dirname(currentdir);sys.path.append(parentdir)
 
-import getTargetInfo
-targetDir = getTargetInfo.getTargetDir()
-shotNum = getTargetInfo.getShotNum()
-
 import getInputFileDictionary
-inputFileDict = getInputFileDictionary.getInputFileDictionary('cql3d')
 import helperFunctions as helper
 import numpy as np
 import matplotlib.pyplot as plt
-
 from scipy.interpolate import interp1d
-
 import netCDF4
 import getTargetInfo
+
+targetDir = getTargetInfo.getTargetDir()
+shotNum = getTargetInfo.getShotNum()
+
+inputFileDict = getInputFileDictionary.getInputFileDictionary('cql3d')
+
 targetDir = getTargetInfo.getTargetDir()
 print(targetDir)
 
 cql_nc = netCDF4.Dataset(f'{targetDir}/cql3d.nc','r')
 
-tiscal = 1
-tescal = 1
-enescal = 1
-
-#if the temperature and density scale factors are in the input file, go get them
-try:
-    tiscal = inputFileDict['setup']['tiscal']
-except:
-    pass
-try:
-    tescal = inputFileDict['setup']['tescal']
-except:
-    pass
-try:
-    enescal = inputFileDict['setup']['enescal']
-except:
-    pass
-T_e = inputFileDict['setup']['tein']*tescal
-T_i = inputFileDict['setup']['tiin']*tiscal
-n_e = inputFileDict['setup']['enein(1,1)']*1e6*enescal
-
-
-ryain = inputFileDict['setup']['ryain']
-
-_,Zeffin = helper.getCQLZeff(rho_pol = ryain)
-
+ryain,T_e = helper.getCQLTe()
+ryain,T_i = helper.getCQLTD()
+ryain,n_e = helper.getCQLne()
+ryain,Zeffin = helper.getCQLZeff()
 
 neFunc = interp1d(ryain, n_e)
 TiFunc = interp1d(ryain, T_i)
