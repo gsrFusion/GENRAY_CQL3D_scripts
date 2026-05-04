@@ -24,4 +24,8 @@ or call
   
 Congratulations, it should just work, but probably something will go wrong.
 If nothing went wrong, then you can use the various scripts to analyze the outputs.
-  
+
+
+IMPORTANT: I have always used rho_pol = sqrt(psi_N) as my radial variable in GENRAY/CQL3D.
+Many of the scripts assume this is the case, either in what they list as the x label or in the assumption that (radial variable)^2 = psi_N
+If you choose a different radial variable, be sure to look through each script very carefully to see where things will need to be changed.
