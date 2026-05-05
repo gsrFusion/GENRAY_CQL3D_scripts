@@ -74,6 +74,7 @@ def getPeakFirstPassDepostion(cqlrf_nc, genray_in):
     return radialBinCenters[np.argmax(powerDep)]
 
 #returns the width in meters of the largest current peak
+#the width is the value at the LFS midplane
 def getJcdWidth(targetDir = None, fracOfPeak = 0.5, mainPeak = True,
                 R_lfs = None):
 
@@ -81,7 +82,6 @@ def getJcdWidth(targetDir = None, fracOfPeak = 0.5, mainPeak = True,
         targetDir = getTargetInfo.getTargetDir()
 
     cql_nc = netCDF4.Dataset(f'{targetDir}/cql3d.nc','r')
-
     curr = cql_nc.variables["curr"][-1,:]*1e4/1e6#convert to MA/m^2
 
     if R_lfs is None:
@@ -95,13 +95,6 @@ def getJcdWidth(targetDir = None, fracOfPeak = 0.5, mainPeak = True,
 
     if mainPeak:
         maxPeakIndex = np.argmax(normed)
-        """
-        indicesBelowThresh = np.where(normed <= fracOfPeak)[0]
-
-        leftIndex = indicesBelowThresh[indicesBelowThresh < maxPeakIndex][-1]
-        rightIndex = indicesBelowThresh[indicesBelowThresh > maxPeakIndex][0]
-        """
-        maxPeakHeight = curr_interp[maxPeakIndex]
         leftIndex = maxPeakIndex
         rightIndex = maxPeakIndex
 
@@ -110,11 +103,11 @@ def getJcdWidth(targetDir = None, fracOfPeak = 0.5, mainPeak = True,
                 leftIndex -= 1
             if normed[rightIndex] > fracOfPeak:
                 rightIndex += 1
-        #"""
         width = R_lfs_interp[rightIndex] - R_lfs_interp[leftIndex]
 
     else:
         width = R_lfs_interp[normed >= fracOfPeak][-1] - R_lfs_interp[normed >= fracOfPeak][0]
+    
     return width
 
 #returns int(rho *J * dA)/int(J * dA)
@@ -145,7 +138,6 @@ def getAvgCurrentLocAndTotal(targetDir):
 def getSPA(targetDir):
     if targetDir == None:
         targetDir = getTargetInfo.getTargetDir()
-
 
     genray_in = None
     genray_in = getInputFileDictionary.getInputFileDictionary('genray_LH', targetDir=targetDir)
@@ -187,13 +179,11 @@ def getSPA(targetDir):
         print(f'something went wrong')
         return -1
 
-def getAverageDampingNpara(targetDir = None, lobe = 1, effic = True):
+#returns the average <1/N||^2> at damping
+#the value of 1/N||^2 along the ray is weighted by how much damping there is at that location
+def getAvgEfficMetricAtDamping(targetDir = None, lobe = 1):
     if targetDir == None:
         targetDir = getTargetInfo.getTargetDir()
-
-    if not effic:
-        print('need to implement')
-        uh = oh
 
     cqlrf_nc = netCDF4.Dataset(f'{targetDir}/cql3d_krf001.nc','r')
     genray_nc = netCDF4.Dataset(f'{targetDir}/genray.nc','r')
@@ -203,9 +193,6 @@ def getAverageDampingNpara(targetDir = None, lobe = 1, effic = True):
     
     Nparas = np.copy(genray_nc.variables["wnpar"]) #n_|| of the ray at each point along the ray trace
     
-    #Npara_binEdges = np.linspace(0,1,100)
-    #Npara_binCenters = (Npara_binEdges[:-1] + Npara_binEdges[1:])/2
-    #Npara_depositions = np.zeros(len(Npara_binCenters))
     totalDeposition = 0
     weighted_effic = 0
     for ray in range(len(delpwr)):
@@ -227,35 +214,12 @@ def getAverageDampingNpara(targetDir = None, lobe = 1, effic = True):
             weighted_effic += np.sum((effic) * ray_pwrchange)
             totalDeposition += np.sum(ray_pwrchange)
 
-
-            #for j in range(len(powerChangeCenters)):
-            #    if powerChangeCenters[j] > 0:
-            #        index = findNearestIndex(Nparas_ray_center[j], Npara_binCenters)
-            #        Npara_depositions[index] += powerChangeCenters[j]
-       
-    #Npara_binCenters = Npara_binCenters[Npara_depositions > 1e8]
-    #Npara_depositions = Npara_depositions[Npara_depositions > 1e8]
-
     weightedAvg_Npara = weighted_effic/totalDeposition#np.sum(Npara_depositions*Npara_binCenters) / np.sum(Npara_depositions)
-
-    #fig,ax = plt.subplots()
-    #one = Npara_depositions
-    #two = Npara_depositions/Npara_binCenters**2
-
-    #weight_one = np.sum(one*Npara_binCenters) / np.sum(one)
-    #weight_two = np.sum(two*Npara_binCenters) / np.sum(two)
-    """
-    ax.plot(Npara_binCenters, one/np.max(one))
-    ax.plot(Npara_binCenters, two/np.max(two))
-    ax.axvline(weight_one, lw = 2, color = 'k')
-    ax.axvline(weight_two, lw = 2, color = 'k')
-    ax.axvline(weightedAvg_Npara, lw = 2, color = 'k')
-    plt.show()
-    """
 
     return weightedAvg_Npara
 
-#returns the SPA of the forward lobe
+#returns the n-pass absorption
+#somewhat deprecated
 def getNPA(cqlrf_nc, genray_in,numBounces, lobes = [1]):
     avgNPA = 0
     startingDelpwr = -1
@@ -378,7 +342,7 @@ def drawFluxSurfaces(ax, gfileDict = None, rhosToPlot = [.2,.4,.6,.8,1],
     ax.contour(rInterp, zInterp, psirzNormInterp, np.square(rhosToPlot), colors= colors, linewidths=2.25)
 
 #returns the total current
-#this I think also includes the inductive current when E|| isnt set to 0
+#this also includes the inductive current when E|| isnt set to 0
 def getCurrent(cql_nc):
     curr = cql_nc.variables["curr"][-1,:]*1e4/1e6#convert to MA/m^2
     darea = cql_nc.variables["darea"][:]/1e4#convert to m^2
@@ -505,6 +469,7 @@ def getCQLZeff(targetDir = None, rho_pol = None):
 
     return rhos, Zeff
 
+#returns the rho_pol value at which the safety factor is equal to a given value
 def getRhopolOfq(q, gfileDict):
     qpsi = np.abs(gfileDict["qpsi"])
 
@@ -512,6 +477,7 @@ def getRhopolOfq(q, gfileDict):
     closest_qIndex = findNearestIndex(q, qpsi)
     return np.sqrt(tryPsi)[closest_qIndex]
 
+#convert rho_pol to rho_tor
 def convertRhopolToRhotor(rho_pol, targetDir = None):
     if targetDir == None:
         targetDir = getTargetInfo.getTargetDir()
@@ -554,6 +520,7 @@ def convertRhotorToRhopol(rho_tor, targetDir = None):
 
 
 #convert the input rho_pol coordinate to major radius at the midplane
+#you can choose whether you take the HFS or LFS midplane values
 def convertRhopolToRmidplane(rhos, targetDir = None, side = 'LFS'):
     if targetDir == None:
         targetDir = getTargetInfo.getTargetDir()
@@ -587,6 +554,8 @@ def convertRhopolToRmidplane(rhos, targetDir = None, side = 'LFS'):
     Rs_fromRho_psi = interp1d(midplanePsi, relevantR_interp, fill_value = 'extrapolate', bounds_error = False)(rhos**2)
     return Rs_fromRho_psi
 
+#return the value of the magnetic field across the midplane
+#this midplane is the plasma midplane, which may not align with Z=0
 def getBmidplaneAtR(Rs,targetDir = None):
     if targetDir == None:
         targetDir = getTargetInfo.getTargetDir()

@@ -1,5 +1,5 @@
 ###
-# Outputs the FWHM of the LH driven current density in m
+# Simple script to look at current profile and print out FWHM in meters
 ###
 
 import numpy as np
@@ -41,18 +41,14 @@ peakCurr = np.max(curr)
 rya = np.ma.getdata(cql_nc.variables["rya"][:])
 #convert these rho_pol points to major radius points on the LFS midplane
 R_lfs = helper.convertRhopolToRmidplane(rya, targetDir, side = 'LFS')
-#need to do this interpolation because otherwise the current density profile is too coarse on a cm scale
-R_lfs_interp = np.linspace(R_lfs[0], R_lfs[-1],500)
-curr_interp = interp1d(R_lfs, curr)(R_lfs_interp)
 
-mask = np.where(curr_interp >= peakCurr/2)
-mainPeakPoints = R_lfs_interp[mask]
-fwhm = np.abs(mainPeakPoints[0] - mainPeakPoints[-1])
-print(f'fwhm = {fwhm} m')
+fwhm = helper.getJcdWidth(fracOfPeak = 0.5, mainPeak = True)
+print(f'fwhm: {fwhm} m')
 
 fig,ax = plt.subplots()
-ax.plot(rya, curr, lw = 2, label = r'$J_{LH}$')
+ax.plot(R_lfs, curr, lw = 2, label = r'$J_{LH}$')
 ax.set_xlabel(r'$R_{LFS}$')
 ax.set_ylabel(r'current density J (MA/$m^2$)')
 fig.tight_layout()
 plt.show()
+

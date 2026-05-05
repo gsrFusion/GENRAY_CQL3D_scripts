@@ -88,8 +88,9 @@ def getInputFileDictionary(gen_or_cql,targetDir = None):
             return dicti
 
         except:
-            print(f"didn't find genray_LH")
-            return createInputFileDictionary(f'{targetDir}/genray.in')
+            print(f"didn't find genray_LH.in, using genray.in")
+            dicti = createInputFileDictionary(f'{targetDir}/genray.in')
+            return dicti
     elif gen_or_cql == 'cql3d':
         return createInputFileDictionary(f'{targetDir}/cqlinput')
         

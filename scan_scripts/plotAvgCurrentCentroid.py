@@ -131,7 +131,7 @@ def addCurrentCurve(shotNum, ax, color, label, ax_curr):
 
             if SPA > minSPA:
                
-                weightedAvg_Npara = helper.getAverageDampingNpara(targetDir = targetDir, effic = True, lobe = 1)
+                weightedAvg_Npara = helper.getAvgEfficMetricAtDamping(targetDir = targetDir, lobe = 1)
 
                 curr = cql_nc.variables["curr"][-1,:]*1e4/1e6#convert to MA/m^2
                 rya = np.ma.getdata(cql_nc.variables["rya"][:])#convert to m^2

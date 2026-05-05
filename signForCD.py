@@ -1,3 +1,10 @@
+"""
+Assuming that the sign of B0 and Ip are correctly recorded in the eqdsk
+and assuming that they are in the same direction if they have the same sign,
+this script tells you whether N|| needs to be positive or negative to drive co current
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 import getTargetInfo

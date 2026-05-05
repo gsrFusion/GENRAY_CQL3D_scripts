@@ -1,0 +1,11 @@
+Grant's foolproof 3 step process of looking at a new timeslice
+
+1) Create the folder {machine}_shots/{machine}_{shotNum}.{time}
+    e.g.: DIIID_shots/DIIID_147634.04565
+
+2) Add the eqdsk mapping '{shotNum}.{time}':'{eqdskName}' to shotToEqdsk.py
+    e.g.: Add '147634.04565':'g147634.04565' to DIIID_eqdskDict
+
+3a) If you're trying to reproduce an experimental spectrum, use exp_scripts/runExperimentalCase.py to take in the phase information and estimate the spectrum
+
+3b) If you're assuming a spectrum, either directly use setupInputFiles.py or use scan_scripts/createScanForShot.py

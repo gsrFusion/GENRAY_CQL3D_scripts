@@ -1,6 +1,7 @@
 ###
+# Creates a dictionary with many useful values from an eqdsk.
 # I stole this code from Syun'ichi. I have no idea how it actually works.
-# most modifications will likely need to happen at the top of the getGfileDict method
+# I only did some modifications to get it to play nice
 ###
 
 

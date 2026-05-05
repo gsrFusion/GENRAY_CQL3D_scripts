@@ -80,7 +80,7 @@
  prmt1 =  0.0
  prmt2 =  999900.0
  prmt3 =  0.01
- prmt4 =  1e-07
+ prmt4 =  5e-6
  prmt6 =  0.001
  prmt9 =  1000000000000000.0
  icorrect =  1
@@ -378,7 +378,7 @@
  tol_emis =  0.005
  nharm1 =  1
  nharm2 =  1
- nfreq =  15
+ nfreq =  10
  freq00 =  1.4
  freq01 =  1.55
  wallr =  0.75

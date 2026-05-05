@@ -16,7 +16,7 @@ if machine == 'DIIID':
     intermediaryDir = ''#redemption/'#f'ECE_testing/'#3modules/'
 
     topmostShotDir = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shot}{timeString}'
-    targetDir = f'{topmostShotDir}/{intermediaryDir}{machine}_{shot}{timeString}_n2.8Npara_1MW_frameworkTest'
+    targetDir = f'{topmostShotDir}/{intermediaryDir}{machine}_{shot}{timeString}_n2.9Npara_1MW_id2'
     
     """
     shot ='203912'
@@ -91,9 +91,6 @@ if machine == 'NTPT':
     #"""
 
 
-
-#topmostShotDir = f'/home/grantr/scratch/genray_batch/{machine}_shots/{machine}_{shot}'
-#targetDir = f'{topmostShotDir}/thgrill_npara_scan/MANTA_posCS_p1.75Npara_220thgrill_1MWfor'
 
 #returns the directory where the shot of interest is stored
 def getTargetDir():

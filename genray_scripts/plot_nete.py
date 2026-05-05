@@ -1,5 +1,6 @@
 ###
 # Plots the electron and ion densities and temperatures according to the genray input file
+# The plot_profs.py cql3d script is superior, but this can be used as a sanity check
 ###
 
 import os, sys
@@ -12,7 +13,7 @@ targetDir = getTargetInfo.getTargetDir()
 shotNum = getTargetInfo.getShotNum()
 
 import getInputFileDictionary
-inputFileDict = getInputFileDictionary.getInputFileDictionary('genray')
+inputFileDict = getInputFileDictionary.getInputFileDictionary('genray_LH')
 
 import numpy as np
 import matplotlib.pyplot as plt
