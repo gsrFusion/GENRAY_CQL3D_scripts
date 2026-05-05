@@ -1,13 +1,10 @@
+"""
+This is effectively equivalent to plotDistributionFunction_2D.py, but it plots slices are desired radii
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-import matplotlib.cbook as cbook
-from matplotlib import cm
-from matplotlib import ticker, cm 
- 
 import os, sys
-from matplotlib.path import Path
-from scipy.signal import find_peaks
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -60,7 +57,6 @@ def plotEnergeticHeatMap():
     #distribution function for energetic particles
     energeticF = f[:,:,:]
 
-
     energeticF_integOverPitch = np.zeros((len(rya), len(enerkev[minEnergyIndex:])))
     for rhoIndex in range(len(rya)):
         #this is the angular part of the spherical jacobian
@@ -69,7 +65,7 @@ def plotEnergeticHeatMap():
     
     fig,ax = plt.subplots(figsize=(8,5.5))
 
-    rhosToPlot = np.array([.1,.2,.3,.4,.5,.6,.7,])
+    rhosToPlot = np.array([.1,.2,.3,.4,.5,.6,.7,.8,.9,1])
     for rho_pol in rhosToPlot:
         rho_index = helper.findNearestIndex(rho_pol, rya)
 

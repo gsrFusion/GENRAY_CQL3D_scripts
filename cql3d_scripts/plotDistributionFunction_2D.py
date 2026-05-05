@@ -1,19 +1,16 @@
 """
 Plots a heat map of energy and radial position of particles above a certain threshold energy
 Integrated over pitch angle
+Before using this for anything quantitative, i suggest double checking my math
 """
 
 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-import matplotlib.cbook as cbook
-from matplotlib import cm
-from matplotlib import ticker, cm 
- 
 import os, sys
-from matplotlib.path import Path
-from scipy.signal import find_peaks
+import netCDF4
+
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -22,7 +19,6 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-import netCDF4
 import getTargetInfo
 targetDir = getTargetInfo.getTargetDir()
 print(targetDir)
@@ -108,7 +104,9 @@ def plotEnergeticHeatMap():
 
     fig.colorbar(pcm, ax=ax)#, extend='max')
     fig.tight_layout()
-    ax.set_xlim([50,500])
+    ax.set_xlim([0,500])
+    ax.set_ylabel(r'$\rho_{pol}$')
+    ax.set_xlabel(r'$Energy (keV)$')
     plt.show()
 
     #this code here was used to test that this difference method of getting the particle spatial density at each radial and velocity point

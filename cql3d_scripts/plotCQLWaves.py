@@ -1,15 +1,15 @@
 """
-Plots the ray traces and the RF power deposition density
+Plots the poloidal and/or toroidal ray traces
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from matplotlib.collections import LineCollection
 import matplotlib
+from matplotlib.path import Path
+import netCDF4
 
 import os, sys
-from matplotlib.path import Path
-from scipy.signal import find_peaks
+
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -17,7 +17,12 @@ os.chdir(dname)
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
+
 import getGfileDict
+import helperFunctions as helper
+import getInputFileDictionary
+import getTargetInfo
+
 gfileDict = getGfileDict.getGfileDict()
 
 rmaxis = gfileDict["rmaxis"]
@@ -29,13 +34,9 @@ B0 = bcentr*rzero/rmaxis
 print(f'B0: {B0}, bcentr: {bcentr}')
 print(f'R0: {rmaxis}, rzero: {rzero}')
 
-import helperFunctions as helper
-import getInputFileDictionary
 genray_in = getInputFileDictionary.getInputFileDictionary('genray_LH')
 cqlinput = getInputFileDictionary.getInputFileDictionary('cql3d')
 
-import netCDF4
-import getTargetInfo
 targetDir = getTargetInfo.getTargetDir()
 print(targetDir)
 shotNum = getTargetInfo.getShotNum()
@@ -57,8 +58,6 @@ def plotRays(toroidal = False, poloidal = True, includeTitle = True):
 
     xlim = gfileDict["xlim"] #R points of the wall
     ylim = gfileDict["ylim"] #Z points of the wall
-    rbbbs = gfileDict["rbbbs"] #R points of the LCFS
-    zbbbs = gfileDict["zbbbs"] # Z points of the LCFS
     toroidalAngle = cqlrf_nc.variables["wphi"][:] 
     wr  = cqlrf_nc.variables["wr"][:] #major radius of the ray at each point along the trace
     wz  = cqlrf_nc.variables["wz"][:] #height of the ray at each point along the trace
@@ -66,7 +65,6 @@ def plotRays(toroidal = False, poloidal = True, includeTitle = True):
     wr *= .01; wz*=.01 #convert to m from cm
 
     radialVariable = (np.copy(cqlrf_nc.variables["spsi"]))#radial variable. I think it's rho_pol in my case. Doesn't really matter in this application
-    nparas = cqlrf_nc.variables['wnpar'][:]
     norm = plt.Normalize(0, 1)
 
     fig_tor = None; fig_pol = None
@@ -83,7 +81,6 @@ def plotRays(toroidal = False, poloidal = True, includeTitle = True):
         ax_pol.set_ylabel("Z (m)")
         ax_pol.set_xlabel("R (m)")
         ax_pol.plot(xlim, ylim, color = 'grey', lw = 3)#plot wall
-        #ax_pol.plot(rbbbs, zbbbs, 'k', lw = 2)#plot LCFS
     if toroidal:
         fig_tor, ax_tor = plt.subplots(figsize = (6.5,5.5))
         ax_tor.set_ylabel("Y (m)")
@@ -96,16 +93,16 @@ def plotRays(toroidal = False, poloidal = True, includeTitle = True):
     #plot the ray using a LineCollection which allows the colormap to be applied to each ray
     for ray in range(len(wr)):
         
-        if ray % 10 > 0:
-            pass
-        #if not(genray_in['grill'][f'anmax({3})'] >= nparas[ray][0] >= genray_in['grill'][f'anmin({3})']):
+        # this if statement will let you control if you only want to plot one lobe
+        #just change the 3 to whatever index you need
+        #if not(genray_in['grill'][f'anmax(3)'] >= nparas[ray][0] >= genray_in['grill'][f'anmin(3)']):
         #    continue
 
         bounceIndex = helper.findBounceIndex(radialVariable[ray],bounceToFind = 1)
         mostPowerDep = helper.findNearestIndex(1 - maxDelPwrPlot, delpwr[ray]/delpwr[ray][0]) #find the index of the last ray point we want to plot
+        #choose whenther you want to end plotting after the first bounce or once enough power is deposited
         endingIndex = mostPowerDep#min(bounceIndex,mostPowerDep)
         
-        #if rays are in the forwrad lobe, use them to calcualte first and second pass absorption
         if poloidal:
             points = np.array([wr[ray][:endingIndex], wz[ray][:endingIndex]]).T.reshape(-1, 1, 2)
             segments = np.concatenate([points[:-1], points[1:]], axis=1)
@@ -128,13 +125,12 @@ def plotRays(toroidal = False, poloidal = True, includeTitle = True):
             lc.set_array(delpwr[ray][:endingIndex]/delpwr[ray][0])
             lc.set_linewidth(1)
             ax_tor.add_collection(lc)
-    #"""
+
     avgSPA_allLobes, onePassDelpwr, initialDelPwr = helper.getSPA(targetDir)
     
     print(f'SPA for each lobe: {avgSPA_allLobes}')
     totalSPA = 1- np.sum(onePassDelpwr)/np.sum(initialDelPwr)
     print(f'avg SPA across all lobes: {totalSPA}')
-
 
     N_para_launch = (genray_in['grill']['anmax(1)'] + genray_in['grill']['anmin(1)'])/2
 
@@ -146,7 +142,6 @@ def plotRays(toroidal = False, poloidal = True, includeTitle = True):
     if poloidal:
         if includeTitle:
             fig_pol.suptitle(r'N$_{\parallel, LCFS}$ = ' + f'{N_para_launch:.2f}\n'+r'SPA$_{forward}$ = ' + f'{avgSPA_allLobes[0]:.3f}')#, Shot {shotNum}')
-            #ax.set_title(f"Plotting Rays until {(maxDelPwrPlot) * 100} %\n ray power deposition")
         ax_pol.set_aspect('equal')
         if machine != 'FENIX':
             ax_pol.set_ylim(min(ylim)-.05, max(ylim)+.05)
@@ -159,22 +154,12 @@ def plotRays(toroidal = False, poloidal = True, includeTitle = True):
 
         lim = np.array([xlim, ylim]).T
         limiterPath  = Path(lim)
-        """
-        if machine =='FENIX':
-            helper.drawFluxSurfaces(ax_pol, rhosToPlot = [.2,.4,.6,.8], colors = 'k',
-                                    zBounds = [-.35,.35], limPath = limiterPath)
-        else:
-            helper.drawFluxSurfaces(ax_pol, rhosToPlot = [.2,.4,.6,.8], colors = 'k', limPath = limiterPath)
-        """
+        
         helper.drawFluxSurfaces(ax_pol, colors = 'k', limPath = limiterPath)
         fig_pol.tight_layout()
-        #fig_pol.subplots_adjust(top=0.92)
 
     if toroidal:
-        #ax.set_title(r'$n = '+f'{denscale}'+r' \cdot n_{190316}$')
-        #ax.set_title(r'$B = 0.9 \cdot B_{182659}$')
         ax_tor.set_title(r'N$_{\parallel, launch}$ = ' + f'{N_para_launch:.1f}')
-        #ax.set_title(f"Plotting Rays until {(maxDelPwrPlot) * 100} %\n ray power deposition")
         ax_tor.set_aspect('equal')
         thetas = np.linspace(0,2*np.pi,100)
         ax_tor.plot(np.cos(thetas), np.sin(thetas), color = 'k', linewidth = 2)
@@ -185,6 +170,7 @@ def plotRays(toroidal = False, poloidal = True, includeTitle = True):
 
 #plots where power is deposited in the first pass
 #it's a bit rough, but it gives a good sense
+#this is also probably deprecated
 def plotFirstPassAbsorption():
     radialBinEdges = np.linspace(0,1,51)
     radialBinCenters = (radialBinEdges[1:]+radialBinEdges[:-1])/2
@@ -204,16 +190,13 @@ def plotFirstPassAbsorption():
             indices[indices>49] = 49
             powerDep[indices-1] += np.diff( delpwr[ray][:firstBounceIndex])
     
-
     ax.plot(radialBinCenters, powerDep)
     ax.set_xlim([0,1])
 
 
 def main():
-    plotRays(poloidal = True, toroidal = False, includeTitle = False)
+    plotRays(poloidal = True, toroidal = True, includeTitle = False)
     #plotFirstPassAbsorption()
-    plt.savefig('147634_n2.9Npara_0height.jpeg', dpi=300)
-
     plt.show()
 
 main()

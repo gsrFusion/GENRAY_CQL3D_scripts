@@ -1,5 +1,5 @@
 ###
-# Plots the electron and ion densities and temperatures according to the cql3d input file
+# Outputs the DT fusion power assuming n_T = n_D
 ###
 import numpy as np
 import matplotlib.pyplot as plt
@@ -52,14 +52,15 @@ def Bosh_Hale_reactivity(T):
     return react*1e-6#convert to m^3/s
 
 reactivities = Bosh_Hale_reactivity(T_D)
-reactionRate = reactivities*n_D**2
+reactionRate = reactivities*n_D**2 #assumes n_D = n_T
 powerDensity = (2.819831e-12)*reactionRate
 P_fusion = np.sum(powerDensity*dVol)
 print(f'P_fusion: {P_fusion/1e6} MW')
 
-
 fig,ax = plt.subplots()
 ax.plot(rho_pol, powerDensity/1e6)
 ax.grid()
-#ax.set_ylim(0,1e3)
+ax.set_ylabel('DT fusion power density (MW/m^3)')
+ax.set_xlabel(r'$\rho_{pol}$')
+fig.tight_layout()
 plt.show()

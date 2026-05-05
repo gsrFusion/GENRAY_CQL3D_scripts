@@ -19,9 +19,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import helperFunctions as helper
 
-splitTandN = 'twoPlot'
+splitTandN = False
 
-if splitTandN == False:
+if not splitTandN:
     nrows = 1
 else:
     nrows = 2
@@ -42,24 +42,24 @@ plt.rc('axes', labelsize = 17)
 plt.rc('figure', titlesize = 16)
 plt.rc('legend',fontsize=16)
 
-if splitTandN == False:
+if not splitTandN:
     figsize = (6.4,4.5)#(6.4,4.8)
 else:
     figsize = (6.4,5.5)
 
 fig,axes = plt.subplots(nrows = nrows, figsize=figsize)
 
-if splitTandN == False:
+if not splitTandN:
     axes.set_xlim([0,1])
     axes2 = axes.twinx()
 
     axes.plot(rho_pol, n_e/1e19, label = r'$n_e$', lw = 3, color = 'green')
-    axes2.plot(rho_pol, T_e, label = r'$T_e$', lw = 3,linesplitTandN = 'dashed', color = 'green')
-    axes.plot([.2,.4],[-1,-2], label = r'$T_e$', lw = 3,linesplitTandN = 'dashed', color = 'green')
+    axes2.plot(rho_pol, T_e, label = r'$T_e$', lw = 3,linestyle = 'dashed', color = 'green')
+    axes.plot([.2,.4],[-1,-2], label = r'$T_e$', lw = 3,linestyle = 'dashed', color = 'green')
 
     axes.plot(rho_pol, n_D/1e19, label = r'$n_D$', lw = 3, color = 'royalblue')
-    axes2.plot(rho_pol, T_D, label = r'$T_D$', lw = 3,linesplitTandN = 'dashed', color = 'royalblue')
-    axes.plot([.2,.4],[-1,-2], label = r'$T_D$', lw = 3,linesplitTandN = 'dashed', color = 'royalblue')
+    axes2.plot(rho_pol, T_D, label = r'$T_D$', lw = 3,linestyle = 'dashed', color = 'royalblue')
+    axes.plot([.2,.4],[-1,-2], label = r'$T_D$', lw = 3,linestyle = 'dashed', color = 'royalblue')
 
     axes.set_ylabel(r'Density ($10^{19}m^{-3}$)')
     axes2.set_ylabel(r'Temperature (keV)')

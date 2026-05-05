@@ -1,5 +1,6 @@
 """
-Plots the ray traces and the RF power deposition density
+Plots a the ray trajectories where the colorbar corresponds to where power is absorbed.
+If no power is absorbed at a given location, that part of the ray trajectory is not drawn
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,15 +16,17 @@ os.chdir(dname)
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-import getGfileDict
-gfileDict = getGfileDict.getGfileDict()
-import helperFunctions as helper
-import getInputFileDictionary
-genray_in = getInputFileDictionary.getInputFileDictionary('genray')
-cqlinput = getInputFileDictionary.getInputFileDictionary('cql3d')
 
+import getGfileDict
 import netCDF4
 import getTargetInfo
+import helperFunctions as helper
+import getInputFileDictionary
+
+gfileDict = getGfileDict.getGfileDict()
+genray_in = getInputFileDictionary.getInputFileDictionary('genray_LH')
+cqlinput = getInputFileDictionary.getInputFileDictionary('cql3d')
+
 targetDir = getTargetInfo.getTargetDir()
 print(targetDir)
 shotNum = getTargetInfo.getShotNum()
@@ -38,7 +41,7 @@ plt.rc('axes', labelsize = 16)
 plt.rc('axes', titlesize = 22)
 plt.rc('legend', fontsize = 14)
 
-#plots either the toroidal and/or poloidal ray trajectories
+#plots ray trajectories
 def plotRays(toroidal = False, poloidal = True):
     #rakata
     maxDelPwrPlot = 0.95#what portion of ray power must have been damped before we stop plotting that ray
@@ -47,7 +50,6 @@ def plotRays(toroidal = False, poloidal = True):
     ylim = gfileDict["ylim"] #Z points of the wall
     rbbbs = gfileDict["rbbbs"] #R points of the LCFS
     zbbbs = gfileDict["zbbbs"] # Z points of the LCFS
-    toroidalAngle = cqlrf_nc.variables["wphi"][:] 
     wr  = cqlrf_nc.variables["wr"][:] #major radius of the ray at each point along the trace
     wz  = cqlrf_nc.variables["wz"][:] #height of the ray at each point along the trace
     delpwr= cqlrf_nc.variables["delpwr"][:] #power in the ray at each point
@@ -69,8 +71,7 @@ def plotRays(toroidal = False, poloidal = True):
     for ray in range(len(wr)):
         rayPower = delpwr[ray]/delpwr[ray][0]
         powerChange = -(rayPower[1:] - rayPower[:-1])
-        powerChange[powerChange < .002] = np.nan
-        #print(f'max, min: {np.max(powerChange), np.min(powerChange)}')
+        powerChange[powerChange < .002] = np.nan #ignore very minor changes in ray power
 
         mostPowerDep = helper.findNearestIndex(1 - maxDelPwrPlot, rayPower) #find the index of the last ray point we want to plot
 
@@ -88,7 +89,6 @@ def plotRays(toroidal = False, poloidal = True):
     avgSPA_forwardLobe = avgSPA_allLobes[0]
     
     print(f'SPA for each lobe: {avgSPA_allLobes}')
-    print(genray_in)
     N_para_launch = (genray_in['grill']['anmax(1)'] + genray_in['grill']['anmin(1)'])/2
 
     ax_pol.set_title(r'N$_{\parallel, LCFS}$ = ' + f'{N_para_launch:.2f}\n'+r'SPA$_{forward}$ = ' + f'{avgSPA_forwardLobe:.3f}')#, Shot {shotNum}')
