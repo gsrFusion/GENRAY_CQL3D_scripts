@@ -1,3 +1,9 @@
+###
+# This script is what I used to add the recessed port for ECE
+# it originally lived on the MFE workstation, but should work here too
+# It's not overly elegant. If the DIII-D wall changes at all, this will probably not work since it relies on knowing where in the wall array the new points need to be inserted
+###
+
 import numpy as np
 import matplotlib.pyplot as plt
 import getGfileDict

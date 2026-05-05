@@ -1,17 +1,10 @@
 ###
-# Plot the ray trajectories and damping as predicted by GENRAY
-# since it's a linear code, the damping is very wrong for LH, but the ray trajectory can be useful
+# Plots the Zeff profile from GENRAY. Useful for debugging.
 ###
 
 
-import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import argrelextrema
-from matplotlib.collections import LineCollection
-
-import matplotlib
 import os, sys
-from scipy.signal import find_peaks
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -21,7 +14,6 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import getGfileDict
-import helperFunctions as helper
 import getInputFileDictionary
 import netCDF4
 

@@ -1,15 +1,14 @@
 ###
 # Plot the ray trajectories and damping as predicted by GENRAY
 # since it's a linear code, the damping is very wrong for LH, but the ray trajectory can be useful
+# may also take a long time to plot since the rays are apt to be much longer than they would be when proper damping is accounted for
 ###
-
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
-
-import matplotlib
 import os, sys
+
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -51,8 +50,6 @@ def plotRays():
     zbbbs = gfileDict["zbbbs"] # Z points of the LCFS
     
     wr  = genray_nc.variables["wr"][:]/100 #major radius of the ray at each point along the trace, in m
-    nparas = genray_nc.variables['wnpar'][:]
-
     wz  = genray_nc.variables["wz"][:]/100 #height of the ray at each point along the trace, in m
     delpwr= genray_nc.variables["delpwr"][:] #power in the ray at each point
     maxDelPwrPlot = 1#0.7 #what portion of ray power must have been damped before we stop plotting that ray

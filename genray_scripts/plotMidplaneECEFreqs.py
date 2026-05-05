@@ -1,3 +1,8 @@
+###
+# Plots the 1st, 2nd, and 3rd electron cyclotron frequencies along the midplane
+# Gives frequencies for both an electron at rest and a fast electron (default 100 keV)
+###
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -27,8 +32,10 @@ gfileDict = getGfileDict.getGfileDict()
 m_e = 9.109e-31
 e = 1.602e-19
 c= 2.99e8
-gamma = (100*1.602e-16)/(m_e*c**2) + 1
-print(f'gamma: {gamma}')
+
+E_fast = 100 #keV
+
+gamma = (E_fast*1.602e-16)/(m_e*c**2) + 1
 rgrid = gfileDict["rgrid"]
 
 LCFS_mask = (rgrid < np.max(gfileDict['rbbbs'])*(rgrid > gfileDict['rmaxis']))

@@ -1,3 +1,6 @@
+# CompX made this script to make a bunch of diagnostic plots
+# May be useful.
+# 
 # genray_plots.py
 # Plots genray.nc (output data file produced by GENRAY)
 

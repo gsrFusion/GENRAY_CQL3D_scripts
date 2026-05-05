@@ -1,5 +1,6 @@
 """
-Plots the minimum propagating n_para according to the accessibility condition inside the LCFS
+Plots the RH cutoff for the ECE diagnostic rays
+Waves are cutoff when w_RH >= w_ECE
 """
 
 import numpy as np
@@ -78,16 +79,12 @@ W_ces = q*interped_B/m_e
 
 w_R = W_ces/2 + np.sqrt(W_ces**2/4 + w_pes**2)
 
-
 rayNum = 14
 freq = wfreq_nc[rayNum]
 Rs = wr[rayNum]
 Zs = wz[rayNum]
 
-#w_R[w_R >= freq*2*np.pi*1e9] = np.nan
-
 fig,ax = plt.subplots(figsize = (4.25,7.1))
-
 
 toPlot = w_R/(freq*2*np.pi*1e9)
 toPlot[toPlot>=1] = np.nan

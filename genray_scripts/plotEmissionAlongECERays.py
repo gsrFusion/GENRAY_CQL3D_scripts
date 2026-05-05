@@ -1,5 +1,5 @@
 """
-Plots the ray traces and the RF power deposition density
+Plots emission coefficients for EC radiation along the ECE diagnostic rays
 """
 import numpy as np
 import matplotlib.pyplot as plt

@@ -1,15 +1,11 @@
 """
-Plots the ray traces and the RF power deposition density
+Plots the predicted radiation temperature for a given ECE run
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from matplotlib.collections import LineCollection
-import matplotlib
+import netCDF4
 
 import os, sys
-from matplotlib.path import Path
-from scipy.signal import find_peaks
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -17,15 +13,13 @@ os.chdir(dname)
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-import getGfileDict
-gfileDict = getGfileDict.getGfileDict()
-import helperFunctions as helper
+
 import getInputFileDictionary
+import getTargetInfo
+
 genray_in = getInputFileDictionary.getInputFileDictionary('genray')
 cqlinput = getInputFileDictionary.getInputFileDictionary('cql3d')
 
-import netCDF4
-import getTargetInfo
 targetDir = getTargetInfo.getTargetDir()
 print(targetDir)
 shotNum = getTargetInfo.getShotNum()
@@ -45,7 +39,6 @@ def plotECE():
     T_rad = genray_ece_nc.variables['wtemp_rad_fr_wall_nc'][:][:,0]
     freqs = genray_ece_nc.variables['wfreq_nc'][:]
 
-
     DIIID_freqs = np.concatenate([
         np.arange(16, dtype=float) + 83.5,
         np.arange(16, dtype=float) + 98.5,
@@ -61,15 +54,7 @@ def plotECE():
     if shotNum == '203912.02840':
         DIIID_values = [3.90986657, 1.92207408, 1.14608347, 0.8980152 , 0.90144622, 0.88310874, 0.99542892, 1.16315091, 1.28210819, 1.42505062, 1.56541932, 1.75360775, 1.94664073, 2.0989728 , 2.24996495, 2.51467848, 2.65530276, 2.91842628, 3.18849969, 3.29473734, 3.39345956, 3.35527277, 3.34514618, 3.33537626, 3.37313294, 3.52691627, 3.69033527, 3.80110312, 3.40415502, 3.59457946, 3.73860812, 3.58327603, 3.14814997, 3.41182923, 3.10036778, 3.2890234 , 2.74644899, 3.02306676, 3.90997744, 3.30293894]
         sigma = [0.32407308, 0.09690306, 0.03712388, 0.01408105, 0.01599563,  0.01889827, 0.02584553, 0.02985808, 0.03136697, 0.03291208, 0.03791209, 0.04079753, 0.05010213, 0.05171204, 0.03599551, 0.02523545, 0.02445933, 0.06519073, 0.10909792, 0.14878407, 0.18877693, 0.18756162, 0.14052346, 0.09782957, 0.08717646, 0.08782788, 0.09210868, 0.09598194, 0.09004693, 0.09043914, 0.09471819, 0.09060923, 0.07339896, 0.07668096, 0.06623594, 0.06758261, 0.05361393, 0.0979596 , 0.19296521, 0.13284628]
-
-    if shotNum == '203912.02700HighBT':
-        from scipy.interpolate import interp1d
-        print(T_rad.shape)
-        print(freqs.shape)
-        freqFunc = interp1d(freqs, T_rad, bounds_error = False)
-        DIIID_values = freqFunc(DIIID_freqs)
-
-    
+   
     if shotNum == '203917.02800':
         DIIID_values = [1.88153148, 1.06334138, 0.77287638, 0.71353966, 0.7957598 , 0.81235784, 0.92369431, 1.07764757, 1.17986691, 1.30479884, 1.4357419 , 1.61638796, 1.77380645, 1.91137218, 2.03473353, 2.27155042, 2.40146089, 2.63799858, 2.8454299 , 2.9094336 , 3.03571033, 3.08831573, 3.10914326, 3.08271265, 3.09829855, 3.20640135, 3.32712221, 3.4101522 , 3.05551457, 3.21114993, 3.35327983, 3.211025  , 2.78201175, 3.00076437, 2.72971201, 2.93300509, 2.49308944, 2.75303626, 3.42146444, 2.81777763]
     if shotNum == '203917.03000':
@@ -104,9 +89,6 @@ def plotECE():
     if shotNum == '206629.01980':
         DIIID_values = [1.62557411, 2.670825  , 3.19099283, 3.08747721, 3.19742441, 3.16965008, 3.18885827, 3.13842535, 3.03563619, 2.75463343, 1.29195547, 0.86095351, 0.73757094, 0.78413731, 0.86277014, 0.98755425, 0.94162321, 1.07272363, 1.26300037, 1.40404177, 1.53686297, 1.65907061, 1.80295956, 1.94652522, 2.06614232, 2.20460916, 2.29476881, 2.34671545, 2.62834525, 2.59718657, 2.7756989 , 2.85166788, 2.79750729, 2.85078716, 3.10998726, 2.98921895, 3.71210098, 3.51868057, 3.91056252, 3.69034433]
         sigma = [0.04462696, 0.03830183, 0.07477418, 0.2085672 , 0.18950233, 0.03380583, 0.03469968, 0.02646959, 0.03389551, 0.0786064 , 0.03268848, 0.0106076 , 0.00383621, 0.00378556, 0.00609964, 0.00462261, 0.00621331, 0.00528524, 0.0057113 , 0.00614496, 0.00557445, 0.00677678, 0.00733732, 0.00835634, 0.00814092, 0.00779065, 0.00741432, 0.01118284, 0.01067026, 0.00787911, 0.01060659, 0.01144141, 0.01337047, 0.01565993, 0.01690487, 0.04793508, 0.02029674, 0.01805366, 0.02172926, 0.02459364]
-    
-
-
 
     fig,ax = plt.subplots()
     ax.plot(freqs, T_rad, lw = 3, label = 'GENRAY/CQL3D')

@@ -1,3 +1,9 @@
+###
+# Recreates Figure 5.4 from Andrea Schmidt's thesis "Measurements and Modeling of Lower Hybrid Driven Fast Electrons on Alcator C-Mod"
+# However, the original had a /5 in the label. This plots things on the same scale.
+# i got this data by digitizer her plot, so not all details may be perfectly recreated
+###
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -38,6 +44,5 @@ ax.set_ylim(bottom=0)
 ax.set_title(f'Alcator C-Mod shot 1060728011', loc = 'right')
 
 fig.tight_layout()
-plt.savefig('/home/grantr/codes/GENRAY_CQL3D_scripts/thesisImages/cmod.jpeg',dpi=300)
 
 plt.show()

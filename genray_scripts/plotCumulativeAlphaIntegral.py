@@ -1,5 +1,6 @@
 """
-Plots the ray traces and the RF power deposition density
+Plots the cumulative integral of the absorption coefficient alpha along a ray
+The ending value is the optical depth
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -58,7 +59,6 @@ def main():
     fig.tight_layout()
     ax.legend(ncol = 1)
     fig.tight_layout()
-    plt.savefig('203619_tau.jpeg',dpi=300)
     plt.show()
 
 

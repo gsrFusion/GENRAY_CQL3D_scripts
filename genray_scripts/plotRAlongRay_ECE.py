@@ -1,5 +1,5 @@
 """
-Plots the ray traces and the RF power deposition density
+Plots the major radius as a function of distance along an ECE ray
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -37,13 +37,11 @@ def main():
     wsn_nc = genray_ece_nc.variables['wsn_nc'][:]
     wr_em_nc = genray_ece_nc.variables['wr_em_nc'][:]
     wfreq_nc = genray_ece_nc.variables['wfreq_nc'][:]
-    wr = genray_ece_nc.variables['wr'][:]*1e2
-    ws = genray_ece_nc.variables['ws'][:]
 
     fig,ax = plt.subplots()
 
-    for i in range(len(ws)):
-        ax.plot(ws[i],wr[i])
+    for i in range(len(wsn_nc)):
+        ax.scatter(wsn_nc[i],wr_em_nc[i])
 
     ax.set_xlabel('distance along ray')
     ax.set_ylabel(r'major radius (m)')

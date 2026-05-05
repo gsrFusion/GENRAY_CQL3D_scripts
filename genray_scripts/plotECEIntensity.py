@@ -1,15 +1,10 @@
 """
-Plots the ray traces and the RF power deposition density
+Plots the specific intensity used in the ECE calculations vs major radius
 """
-import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from matplotlib.collections import LineCollection
-import matplotlib
-
+import netCDF4
 import os, sys
-from matplotlib.path import Path
-from scipy.signal import find_peaks
+
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -17,15 +12,15 @@ os.chdir(dname)
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
+
 import getGfileDict
-gfileDict = getGfileDict.getGfileDict()
-import helperFunctions as helper
 import getInputFileDictionary
+import getTargetInfo
+
+gfileDict = getGfileDict.getGfileDict()
 genray_in = getInputFileDictionary.getInputFileDictionary('genray')
 cqlinput = getInputFileDictionary.getInputFileDictionary('cql3d')
 
-import netCDF4
-import getTargetInfo
 targetDir = getTargetInfo.getTargetDir()
 print(targetDir)
 shotNum = getTargetInfo.getShotNum()
@@ -55,7 +50,6 @@ def plotECE():
     ax.set_xlabel(r'major radius')
     ax.set_xlim([1.4,2.35])
     ax.set_ylim(bottom = 0)
-    #ax.set_xlim([80,115])
     ax.set_title(shotNum)
     ax.legend(loc = 'best')
     fig.tight_layout()

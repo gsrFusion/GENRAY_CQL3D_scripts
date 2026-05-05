@@ -1,17 +1,12 @@
 ###
-# Plot the ray trajectories and damping as predicted by GENRAY
+# Plot the power density predicted by GENRAY
 # since it's a linear code, the damping is very wrong for LH, but the ray trajectory can be useful
 ###
 
-
-import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import argrelextrema
-from matplotlib.collections import LineCollection
-
-import matplotlib
 import os, sys
-from scipy.signal import find_peaks
+import netCDF4
+
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -21,11 +16,9 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import getGfileDict
-import helperFunctions as helper
 import getInputFileDictionary
-import netCDF4
-
 import getTargetInfo
+
 targetDir = getTargetInfo.getTargetDir()
 machine = getTargetInfo.getMachine()
 genray_in = getInputFileDictionary.getInputFileDictionary('genray')

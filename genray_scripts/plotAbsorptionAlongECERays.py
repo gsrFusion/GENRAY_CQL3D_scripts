@@ -1,5 +1,5 @@
 """
-Plots the ray traces and the RF power deposition density
+Plots the absorption coefficients along the rays
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -56,7 +56,6 @@ def main():
     ax.set_yscale('log')
     ax.legend(ncol = 1)
     fig.tight_layout()
-    plt.savefig('203619_absorption.jpeg',dpi=300)
     plt.show()
 
 

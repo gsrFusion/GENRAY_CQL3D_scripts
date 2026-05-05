@@ -1,6 +1,5 @@
 ###
-# Plot the ray trajectories and damping as predicted by GENRAY
-# since it's a linear code, the damping is very wrong for LH, but the ray trajectory can be useful
+# Plots the Nperp of an ECE ray. May be useful for debugging
 ###
 
 

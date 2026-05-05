@@ -1,4 +1,5 @@
-#GENRAY makes a lot of files. This script removes many of the ones that aren't necessary for data analysis#
+#GENRAY makes a lot of files. This script removes many of the ones that aren't necessary for data analysis
+#I suggest running this regularly but be sure not to run it while the codes are also running
 
 
 import numpy as np
