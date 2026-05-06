@@ -46,10 +46,7 @@ def plotSPAMatrix():
         SPA_allLobes,_,_ = helper.getSPA(targetDir=targetDir)
         SPAs[i] = SPA_allLobes[0]
 
-    #SPAmatrix[SPAmatrix < 0.95] = np.NAN
-
     fig,ax = plt.subplots()
-    #ax.grid()
     ax.plot(NPara_fors, SPAs, lw=2, color = 'tab:blue')
     ax.yaxis.label.set_color('tab:blue')
     ax.set_xlabel(r'N$_{||,forward}$')
