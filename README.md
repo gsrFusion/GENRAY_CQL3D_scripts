@@ -6,7 +6,7 @@ If you've not run GENRAY/CQL3D before, there will likely need to be some module 
 I suggest asking your favorite neighborhood computationalist
 
 These scripts require that simulations runs are stored in a folder structure of 
-  {machine}_shots/{machine}_{shotNum}.{time}/{machine}_{shotNum}.{time}_descriptionOfParticularRun
+  {machine}\_shots/{machine}\_{shotNum}.{time}/{machine}\_{shotNum}.{time}\_descriptionOfParticularRun
 I suggest locating these folders in scratch.
 For examples all my runs are located in /home/grantr/scratch/genray_batch/{machine}\_shots/{machine}_{shotnum}.{time}/{specific simulation run}
 
