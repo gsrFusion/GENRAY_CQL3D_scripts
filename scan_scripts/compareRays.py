@@ -1,12 +1,9 @@
 
 """
-Plots n_para, its toroidal and poloidal components, and n_||,acc
+Plots a desired quantity along a given ray for several simulations
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import patches
-from matplotlib.collections import LineCollection
-from scipy.optimize import fsolve
 
 plt.rc('xtick', labelsize = 14)
 plt.rc('ytick', labelsize = 14)
@@ -25,18 +22,9 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 import helperFunctions as helper
 import netCDF4
-from scipy.interpolate import interp1d
-import shotToEqdsk
-#from omfit_classes import omfit_eqdsk
 
 def plotNEvolution(targetDir, ax, machine, rays = None, color = None, labelSuffix = ''):
     shotNum = targetDir.split('/')[6].split('_')[-1]
-    eqdskName = shotToEqdsk.getEqdskName(shotNum, machine = machine)
-    #geqdsk = omfit_eqdsk.OMFITgeqdsk(f'{targetDir}/{eqdskName}')
-
-    #delta_gfile = geqdsk['fluxSurfaces']['geo']['delta']
-    #rho_pol_gfile = geqdsk['fluxSurfaces']['levels']
-    #delta_func = interp1d(rho_pol_gfile, delta_gfile, bounds_error=False, )
 
     cqlrf_nc = netCDF4.Dataset(f'{targetDir}/cql3d_krf001.nc','r')
     #cql_nc = netCDF4.Dataset(f'{targetDir}/cql3d.nc','r')
@@ -100,9 +88,6 @@ def plotNEvolution(targetDir, ax, machine, rays = None, color = None, labelSuffi
 
     for j in range(len(rays)):
         rayNum = rays[j]
-        deltas = 1#delta_func(radialVariable[rayNum])
-        deltaHat = np.arcsin(deltas)
-        Gamma = np.sin(deltaHat*np.sin(thetas[rayNum]) + thetas[rayNum])*(deltaHat*np.cos(thetas[rayNum])+1)
 
         delpwrRatios = delpwr[rayNum]/np.max(delpwr[rayNum])
         powerIndex = helper.findNearestIndex(1-maxDampingToPlot, delpwrRatios) #find the index of the last ray point we want to plot
@@ -110,6 +95,7 @@ def plotNEvolution(targetDir, ax, machine, rays = None, color = None, labelSuffi
 
         endIndex = powerIndex#min(bounceIndex, powerIndex)
 
+        #this is specific to a case for plotting. 
         if 'PT' in labelSuffix:
             for p in range(len(radialVariable[rayNum])):
                 if radialVariable[rayNum][p] > 1.02 and radialVariable[rayNum][p+1] < radialVariable[rayNum][p]:
@@ -124,76 +110,6 @@ def plotNEvolution(targetDir, ax, machine, rays = None, color = None, labelSuffi
         B_tot_abs = np.abs(sbtot[rayNum])
         B_tor = sb_phi[rayNum]
         B_pol = -sb_theta[rayNum]
-
-        """
-        increasingThetas = np.copy(thetas[rayNum][:endIndex])
-        poloidalDist = ws[rayNum][:endIndex]
-
-        def advanceTheta(t):
-            for p in range(len(t)):
-                if p == 0:
-                    continue
-                else:
-                    if t[p-1] > 6.2 and t[p] < .01:
-                        t[p:] += 2*np.pi
-                
-        advanceTheta(increasingThetas)
-
-        dB_dl = (B_pol[:endIndex][1:] - B_pol[:endIndex][:-1])/(poloidalDist[1:] - poloidalDist[:-1])
-        dtheta_dl = (increasingThetas[:endIndex][1:] - increasingThetas[:endIndex][:-1])/(poloidalDist[1:] - poloidalDist[:-1])
-
-        db_dtheta = dB_dl/dtheta_dl
-
-        thetaCenters = (increasingThetas[1:] + increasingThetas[:-1])/2
-
-        B_pol_derivFunc = interp1d(thetaCenters,db_dtheta, bounds_error=False, fill_value = 'extrapolate')
-        B_pol_deriv = B_pol_derivFunc(increasingThetas)
-        """
-        """
-
-        w_pes = np.sqrt(sene[rayNum]*e**2/(eps_0*m_e))
-        w_pDs = np.sqrt(sene[rayNum]*e**2/(eps_0*m_D))
-        w_ces = e*B_tot_abs/m_e
-
-        freqRatio = w_pes/w_ces
-
-        maxEpsElement = np.zeros(endIndex)
-        for l in range(len(maxEpsElement)):
-            maxEpsElement[l] = np.max(np.abs([cweps11[rayNum][l], cweps12[rayNum][l], cweps13[rayNum][l], cweps22[rayNum][l], cweps23[rayNum][l], cweps33[rayNum][l]]))
-
-        electrostaticRatio = (Nparas[rayNum]**2 + Nperps[rayNum]**2)[:endIndex] / maxEpsElement
-        k_paras = w*Nparas[rayNum]/c
-        k_perps = w*Nperps[rayNum]/c
-        eps_para = -(w_pes**2/w**2)
-        eps_perp = 1 + (w_pes/w_ces)**2 - (w_pDs/w)**2
-        k_phis = Nphis[rayNum]*(w/c)
-        Nthetas = (Nparas[rayNum]-Nphis[rayNum]*(B_tor/B_tot_abs))*(B_tot_abs/B_pol)
-        k_thetas = Nthetas*(w/c)
-
-        denom = (2*w_pes**2*k_paras**2/w**3)*(1 + w_pDs**2/(w**2*eps_perp))
-
-        D = eps_para*k_paras**2 + eps_perp*k_perps**2
-        """
-        """
-        kpara_gamma_component = 2*k_paras*eps_para*((Gamma/A) * (2*B_tor*k_phis/B_tot_abs - k_thetas*B_pol*B_tor**2/(B_tot_abs**3) - k_phis*B_tor**3/(B_tot_abs**3)))
-        kpara_deriv_component = 2*k_paras*eps_para*(1/B_tot_abs)*(k_thetas - k_thetas *B_pol**2/B_tot_abs**2 - k_phis*B_tor*B_pol/B_tot_abs**2)
-        kpara_gamma_component = kpara_gamma_component[:powerIndex]
-        kpara_deriv_component = kpara_deriv_component[:powerIndex]*B_pol_deriv
-
-        epsperp_gamma_component = (eps_para*k_paras**2/eps_perp)*(2*w_pes**2/w_ces**2)*B_tor**2*Gamma/(A*B_tot_abs**2)
-        epsperp_deriv_component = (eps_para*k_paras**2/eps_perp)*(2*w_pes**2/w_ces**2)*B_pol/(B_tot_abs**2)
-        epsperp_gamma_component = epsperp_gamma_component[:powerIndex]
-        epsperp_deriv_component = epsperp_deriv_component[:powerIndex]*B_pol_deriv
-
-        kperp_gamma_component = eps_perp*2*k_phis*(k_phis*B_pol/B_tot_abs - k_thetas)*((B_pol/B_tot_abs)*(Gamma/A) - B_pol*B_tor**2*Gamma/(A*B_tot_abs**3))
-        kperp_deriv_component = eps_perp*2*k_phis*(k_phis*B_pol/B_tot_abs - k_thetas)*((1/B_tot_abs) - B_pol**2/B_tot_abs**3)
-        kperp_gamma_component = kperp_gamma_component[:powerIndex]
-        kperp_deriv_component = kperp_deriv_component[:powerIndex]*B_pol_deriv
-
-        total = kpara_gamma_component + kpara_deriv_component + epsperp_gamma_component + epsperp_deriv_component + kperp_gamma_component + kperp_deriv_component
-        """
-
-        #dmdt = total/denom[:endIndex]
 
         thetaComponent = (Nparas[rayNum]-Nphis[rayNum]*(B_tor/B_tot_abs))
         phiComponent = Nphis[rayNum]*(B_tor/B_tot_abs)
@@ -281,7 +197,6 @@ def makePlot():
     #ax.set_ylim([-.5,5])
     machine = 'NTPT'
 
-
     if machine == 'NTPT':
         fakeMachine = 'DIIID'
 
@@ -366,16 +281,14 @@ def makePlot():
          ha="center", va="center"
          )
     ax.set_xlabel(r"$\rho_{pol}$")
-    #ax.set_xlabel(r"$\rho_{pol}$")
     ax.set_ylabel(r'Refractive Index')
-    #ax.set_ylabel(r'delpwr')
     ax.set_xlim(left= 0.55)
     ax.grid()
     ax.axvline(1, color ='k', lw = 2, linestyle= 'dashed')
     ax.legend(loc='lower center', bbox_to_anchor=(0.5,.99),ncol=2,labelspacing=0.3)
     
     fig.tight_layout()
-    plt.savefig(f'toka_147634_evoCompare_n2.8_-0.25Height.jpeg',dpi=300)
+    #plt.savefig(f'toka_147634_evoCompare_n2.8_-0.25Height.jpeg',dpi=300)
 
     plt.show()
 

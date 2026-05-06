@@ -1,11 +1,18 @@
 """
-Plots the ray traces and the RF power deposition density
+Plots the predicted Trad profile from several simulation runs.
+Necessary to plot the full Trad profile for a single shot since I needed to break the ECE simlation into 4 parts since they are so computationally intensive
+
+I suggest making a case like I have below and then stiching together the ECE runs for each shot:
+targetDirs = [
+            [f'{stem1}_first', f'{stem1}_second', f'{stem1}_third', f'{stem1}_fourth', ],#shot one
+            [f'{stem2}_first', f'{stem2}_second', f'{stem2}_third', f'{stem2}_fourth', ],#shot two
+        ]
+
 """
 import numpy as np
 import matplotlib.pyplot as plt
-
+import netCDF4
 import os, sys
-from scipy.signal import find_peaks
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -14,7 +21,6 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-import netCDF4
 
 plt.rc('xtick', labelsize = 14)
 plt.rc('ytick', labelsize = 14)
@@ -24,6 +30,8 @@ plt.rc('figure', titlesize = 14)
 plt.rc('legend', fontsize = 12)
 
 #plots either the toroidal and/or poloidal ray trajectories
+#if includeWallRef is True, the radiation temperature that includes wall reflections is plotted
+#I'm not sure why one would want to use the one without reflections since it's less realistic
 def addECE(targetDir, ax, label = '', color = None, style = 'solid', includeWallRef = True, minFreq = 0):
     genray_ece_nc = netCDF4.Dataset(f'{targetDir}/genray_ece.nc','r')
 
@@ -43,8 +51,6 @@ def addECE(targetDir, ax, label = '', color = None, style = 'solid', includeWall
     
     ax.plot(freqs[freqs > minFreq], T_rad[freqs > minFreq], lw = 3, 
             label = label, zorder = zorder,color = color, linestyle = style)
-    #ax.axvline(freqs[np.argmax(T_rad)], lw =2, color = 'k')
-    #ax.scatter(freqs, T_rad,  color = color,)
 
 def main():
 
@@ -80,13 +86,11 @@ def main():
         targetDirs = [
             [f'{stem1}_first',f'{stem1}_second',f'{stem1}_third',f'{stem1}_fourth'],
             [f'{stem1}_p0.025Fld_first',f'{stem1}_p0.025Fld_second',f'{stem1}_p0.025Fld_third',f'{stem1}_p0.025Fld_fourth'],
-            #[f'{stem1}_p0.025Fld_0.75pwrFactor_second'],
             [f'{stem1}_p0.05Fld_first',f'{stem1}_p0.05Fld_second',f'{stem1}_p0.05Fld_third',f'{stem1}_p0.05Fld_fourth'],
         ]
         labels = [
             r'E=0 V/m',
             r'E=0.025 V/m',
-            #r'E=0.025 V/m, 0.75 pwrFactor',
             r'E=0.05 V/m',
         ]
         colors = [ 'tab:blue', 'tab:green','tab:red', 'tab:purple', 'tab:grey']
@@ -319,7 +323,6 @@ def main():
             [f'{stem2}_500jx'],
             [f'{stem2}_625jx'],
             [f'{stem1}_second'],
-
         ]
         labels = [
             r'jx = 375',
@@ -342,7 +345,6 @@ def main():
             [f'{stem2}_1e-6prmt4LH'],
             [f'{stem2}_1e-7prmt4LH'],
             [f'{stem1}_second'],
-
         ]
         labels = [
             r'prmt4LH = 1e-4',
@@ -364,8 +366,6 @@ def main():
             [f'{stem2}_1e-2prmt6LH'],
             [f'{stem1}_second'],
             [f'{stem2}_2.5e-3prmt6LH'],
-
-
         ]
         labels = [
             r'prmt6LH = 1e-2',
@@ -382,25 +382,6 @@ def main():
         includeWallRef = True
 
         targetDirs = [
-            [f'{stem2}_5e-6prmt4ECE_5e-3prmt6ECE'],
-            [f'{stem2}_5e-6prmt4ECE_2.5e-3prmt6ECE'],
-            [f'{stem2}_5e-6prmt4ECE_2e-3prmt6ECE'],
-            [f'{stem2}_5e-6prmt4ECE_1.5e-3prmt6ECE'],
-            [f'{stem2}_5e-6prmt4ECE_1e-3prmt6ECE'],
-            [f'{stem2}_5e-6prmt4ECE_9e-4prmt6ECE'],
-
-        ]
-        labels = [
-            r'prmt6LH = 5e-3',
-            r'prmt6LH = 2.5e-3',
-            r'prmt6LH = 2e-3',
-            r'prmt6LH = 1.5e-3',
-            r'prmt6LH = 1e-3',
-            r'prmt6LH = 9e-4',
-        ]
-
-        #"""
-        targetDirs = [
             [f'{stem2}_5e-3prmt6ECE_lowerAcc'],
             [f'{stem2}_2.5e-3prmt6ECE_lowerAcc'],
             [f'{stem2}_1.75e-3prmt6ECE_lowerAcc'],
@@ -409,13 +390,12 @@ def main():
 
         ]
         labels = [
-            r'prmt6LH = 5e-3',
-            r'prmt6LH = 2.5e-3',
-            r'prmt6LH = 1.75e-3',
-            r'prmt6LH = 1e-3',
-            r'prmt6LH = 7.5e-4',
+            r'prmt6ECE = 5e-3',
+            r'prmt6ECE= 2.5e-3',
+            r'prmt6ECE = 1.75e-3',
+            r'prmt6ECE = 1e-3',
+            r'prmt6ECE = 7.5e-4',
         ]
-        #"""
 
         colors = [ 'tab:green', 'tab:blue','tab:red', 'tab:purple', 'tab:grey', 'tab:orange']
         plt.rc('legend', fontsize = 10)
@@ -462,7 +442,9 @@ def main():
             else:
                 addECE(targetDir, ax, color = colors[i], includeWallRef = includeWallRef, minFreq = minFreq)
 
-
+    """
+    For additional DIII-D cases, add the ECE data points here
+    """
     DIIID_values = None
     sigma = None
     if shotNum == '203912.02700':
@@ -501,7 +483,7 @@ def main():
     ax.set_ylim(bottom = 0)
 
     fig.tight_layout()
-    plt.savefig('203619_prmt6ECEScan.jpeg',dpi=300)
+    #plt.savefig('203619_prmt6ECEScan.jpeg',dpi=300)
     plt.show()
 
 

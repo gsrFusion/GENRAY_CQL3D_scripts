@@ -6,9 +6,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import netCDF4
-from scipy.interpolate import interp1d
 import os, sys
-import matplotlib
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -17,8 +15,9 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-import getInputFileDictionary
 import helperFunctions as helper
+import getTargetInfo
+
 plt.rc('xtick', labelsize = 16)
 plt.rc('ytick', labelsize = 16)
 plt.rc('axes', labelsize = 16)
@@ -26,11 +25,9 @@ plt.rc('axes', titlesize = 16)
 plt.rc('figure', titlesize = 14)
 plt.rc('legend', fontsize = 12)
 
-import getTargetInfo
 targetDir = getTargetInfo.getTargetDir()
 shotNum = getTargetInfo.getShotNum()
 machine = getTargetInfo.getMachine()
-import shotToEqdsk
 #from omfit_classes import omfit_eqdsk
 
 def plotSPAMatrix():
@@ -158,8 +155,7 @@ def plotSPAMatrix():
         ax.set_xlim([0,1])
         ax.legend(loc = 'best')
         fig.tight_layout()
-        plt.savefig('DIIID_twoColor.jpeg', dpi=300)
-
+        #plt.savefig('DIIID_twoColor.jpeg', dpi=300)
 
         plt.show()
 

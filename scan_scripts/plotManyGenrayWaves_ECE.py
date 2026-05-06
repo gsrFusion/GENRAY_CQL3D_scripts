@@ -6,12 +6,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import argrelextrema
-from matplotlib.collections import LineCollection
-
-import matplotlib
 import os, sys
-from scipy.signal import find_peaks
+
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -22,7 +18,6 @@ sys.path.append(parentdir)
 
 import getGfileDict
 import helperFunctions as helper
-import getInputFileDictionary
 import netCDF4
 
 
@@ -40,31 +35,29 @@ def findNearestIndex(value, array):
     return idx
 
 #adds the ray traces to ax
-def plotRays(targetDir, label, ax):
+def plotRays(targetDir, label, ax, color):
     gfileDict = getGfileDict.getGfileDict(targetDir = targetDir)
-    genray_nc = netCDF4.Dataset(f'{targetDir}/genray_ece.nc','r')
+    genray_ece_nc = netCDF4.Dataset(f'{targetDir}/genray_ece.nc','r')
 
     xlim = gfileDict["xlim"] #R points of the wall
     ylim = gfileDict["ylim"] #Z points of the wall
     rbbbs = gfileDict["rbbbs"] #R points of the LCFS
     zbbbs = gfileDict["zbbbs"] # Z points of the LCFS
     
-    wr  = genray_nc.variables["wr"][:]/100 #major radius of the ray at each point along the trace, in m
-    wz  = genray_nc.variables["wz"][:]/100 #height of the ray at each point along the trace, in m
+    wr  = genray_ece_nc.variables['wr_em_nc'][:] #major radius of the ray at each point along the trace, in m
+    wz  = genray_ece_nc.variables['wz_em_nc'][:] #height of the ray at each point along the trace, in m
 
     for ray in range(len(wr)):
-        if len(wr[ray]) <= 1:
-            continue
-
-        ax.plot(wr[ray], wz[ray], lw = 3, label = label)
+    
+        ax.plot(wr[ray][wr[ray] > 1], wz[ray][wr[ray] > 1], lw = 3, color = color)
 
     ax.plot(xlim, ylim, 'r', lw = 2)#plot wall
     ax.plot(rbbbs, zbbbs, 'k', lw = 1.5)#plot LCFS
 
-    #ax.set_ylim(min(ylim)*1.05, max(ylim)*1.05)
-    #ax.set_xlim(min(xlim)*.95, max(xlim)*1.05)
+    ax.set_ylim(min(ylim)*1.05, max(ylim)*1.05)
+    ax.set_xlim(min(xlim)*.95, max(xlim)*1.05)
 
-    helper.drawFluxSurfaces(ax)
+    helper.drawFluxSurfaces(ax, targetDir=targetDir)
 
 def main():
     fig,ax = plt.subplots(figsize = (4.25,7.1))
@@ -73,13 +66,13 @@ def main():
     ax.set_xlabel("R (m)")
     ax.set_aspect('equal')
 
-    stem = f'/home/grantr/symlinks/genray_batch/DIIID_shots/DIIID_203619.04135/numRaysTest/DIIID_203619.04135'
-    targetDirs = [f'{stem}_expSpectrum_1Zeff_10000nrelt_0.005prmt6_2e-6prmt4_4nthin_30nnkpar_1e-4prmt4ECE_correctWall',
-                  f'{stem}_expSpectrum_1Zeff_10000nrelt_0.005prmt6_2e-6prmt4_4nthin_30nnkpar_5e-4prmt4ECE_correctWall',]
-
-    labels = ['ECE prmt4 = 5e-4', 'ECE prmt4 = 1e-4']
+    stem = f'/home/grantr/symlinks/genray_batch/DIIID_shots/DIIID_203619.04130/DIIID_203619.04130_expSpectrum_2Zeff/DIIID_203619.04130_expSpectrum_2Zeff_'
+    targetDirs = [f'{stem}first',
+                  f'{stem}second',]
+    colors = ['tab:blue','tab:orange']
+    labels = ['first','second']
     for i in range(len(targetDirs)):
-        plotRays(targetDirs[i], labels[i], ax)
+        plotRays(targetDirs[i], labels[i], ax,colors[i])
     
     ax.legend()
     fig.tight_layout()

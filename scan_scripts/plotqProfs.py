@@ -1,3 +1,7 @@
+"""
+Plots the q profiles of a set of GENRAY/CQL3D runs
+"""
+
 import os, sys
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)

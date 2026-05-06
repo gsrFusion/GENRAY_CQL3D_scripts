@@ -79,10 +79,8 @@ def makePlot():
     ax.set_xlim([0,1])
     ax.legend(loc = 'upper left')
     fig.tight_layout()
-    plt.savefig('toka_ARC_effic.jpeg',dpi=300)
+    #plt.savefig('toka_ARC_effic.jpeg',dpi=300)
     plt.show()
-
-
 
 def addCurrentCurve(shotNum, ax, color, label, ax_curr):
     centroids = []

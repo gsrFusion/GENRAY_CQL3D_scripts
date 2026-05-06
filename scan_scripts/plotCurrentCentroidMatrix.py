@@ -1,3 +1,6 @@
+"""
+Makes a matrix plot where the x and y axes designate a simulation run, and the colorbar is the location of the current centroid
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import netCDF4
@@ -66,7 +69,7 @@ if machine == 'NTPT':
         power = 10
 
 
-    stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shot}{time}/LFSVersion/{machine}_{shot}{time}'
+    stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shot}{time}_LFS/LFSVersion/{machine}_{shot}{time}'
 
 def plotDepMatrix():
     depMatrix = np.zeros((len(NPara_targets), len(grillHeights)))
@@ -126,7 +129,7 @@ def plotDepMatrix():
 
     fig.tight_layout()
     if 'PT' in time:
-        plt.savefig('toka_V3A_PT_LFS_depLoc.jpeg',dpi=300)
+        #plt.savefig('toka_V3A_PT_LFS_depLoc.jpeg',dpi=300)
         pass
     if 'NT' in time:
         #plt.savefig('toka_V3A_NT_depLoc.jpeg',dpi=300)

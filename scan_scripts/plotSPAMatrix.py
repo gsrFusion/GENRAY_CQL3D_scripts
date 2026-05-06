@@ -1,8 +1,10 @@
+"""
+Creates a matrix plot where the x and y axes designate a given GENRAY/CQL3D simulation and the color bar is the SPA
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
-import netCDF4
 import os, sys
-import matplotlib
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -11,7 +13,6 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-import getInputFileDictionary
 import helperFunctions as helper
 
 plt.rc('xtick', labelsize = 16)
@@ -19,20 +20,6 @@ plt.rc('ytick', labelsize = 16)
 plt.rc('axes', labelsize = 20)
 plt.rc('axes', titlesize = 18)
 plt.rc('legend', fontsize = 16)
-
-
-import numpy as np
-import os, sys
-#these shenanigans relate to vscode not having the working directory as the directory of the file it runs
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-os.chdir(dname)
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-import netCDF4
-print(f'past imports')
-
 
 machine = 'NTPT'
 
@@ -91,27 +78,19 @@ def plotSPAMatrix():
                 print(f'failed')
                 SPAmatrix[i,j] = np.nan
 
-
     
     fig,ax = plt.subplots(figsize=(7.25,4.8))
     p = ax.pcolormesh(grillHeights, NPara_targets, SPAmatrix*100,shading = 'nearest', 
                        cmap='viridis', vmin=0, vmax = 100)
     
     ax.set_ylabel(r'N$_{||,LCFS}$')
-    #ax.set_xlabel(r'time (ms)')
     ax.set_xlabel(r'$Z_{launcher}$ (m)')
     ax.set_yticks(NPara_targets)
     ax.set_xticks(grillHeights[::2])
-    #ax.yaxis.get_label().set_fontsize(16)
-    #plt.xticks(rotation=-60)
 
     cbar = fig.colorbar(p, ax = ax, shrink = 1, pad = .01)
-    #cbar.set_label(r'SPA$_{forward}$')
     cbar.set_label(r'Single pass absorption (percent)', fontsize = 16)
     
-    #ax.set_title(r'$\delta = -0.5$')
-    #ax.set_title(rf'{shot}{time}, $N_{{||}}$ and thgrill scan')
-    #ax.set_title(f'{machine} shot {shot} at {time[2:]} ms')
     triString = ''
     if 'PT' in time:
         triString = 'Positive'
@@ -120,7 +99,7 @@ def plotSPAMatrix():
     ax.set_title(f'{triString} triangularity {time[1:-2]}-like')
 
     fig.tight_layout()
-    plt.savefig(f'toka_{time[1:-2]}_{time[-2:]}_SPA_shaped.jpg',dpi=300)
+    #plt.savefig(f'toka_{time[1:-2]}_{time[-2:]}_SPA_shaped.jpg',dpi=300)
 
     plt.show()
 

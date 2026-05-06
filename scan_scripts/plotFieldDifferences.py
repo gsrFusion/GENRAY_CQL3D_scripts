@@ -1,13 +1,9 @@
 ###
-# 2D plots of the total and poloidal magnetic fields
+# Makes a RZ plot showing the difference in Bpol between two plasmas
 ###
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.interpolate import interp2d, interp1d, RectBivariateSpline
-import matplotlib.cm as cm
-import matplotlib
-import netCDF4
 import os, sys
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -26,10 +22,10 @@ plt.rc('figure', titlesize = 16)
 
 machine = 'NTPT'
 fakeDevice = 'DIIID'
-power = 2
+power = 1
 
-PT_target = f'/home/grantr/symlinks/genray_batch/NTPT_shots/{machine}_{fakeDevice}.PT05/{machine}_{fakeDevice}.PT05_n2.5Npara_140thgrill_{power}MW'
-NT_target = f'/home/grantr/symlinks/genray_batch/NTPT_shots/{machine}_{fakeDevice}.NT05/{machine}_{fakeDevice}.NT05_n2.5Npara_140thgrill_{power}MW'
+PT_target = f'/home/grantr/symlinks/genray_batch/NTPT_shots/{machine}_{fakeDevice}.147634PT/{machine}_{fakeDevice}.147634PT_n2.5Npara_0.0grillHeight_{power}MW'
+NT_target = f'/home/grantr/symlinks/genray_batch/NTPT_shots/{machine}_{fakeDevice}.147634NT/{machine}_{fakeDevice}.147634NT_n2.5Npara_0.0grillHeight_{power}MW'
 
 gfileDict_PT = getGfileDict.getGfileDict(targetDir = PT_target)
 gfileDict_NT = getGfileDict.getGfileDict(targetDir = NT_target)
@@ -67,7 +63,6 @@ ax.plot(rbbbs_NT, zbbbs_NT, 'r', lw = 1.5)#plot LCFS
 ax.set_aspect('equal')
 ax.set_title(r'B$_{pol, PT}$ - B$_{pol, NT}$')
 cbar = fig.colorbar(p2, ax = ax, shrink = .5, pad = .01)
-#cbar.set_label(r"B$_{pol}$")
 ax.set_ylabel('Z (m)', labelpad = -10)
 ax.set_xlabel('R (m)')
 ax.set_ylim([np.min(zgrid_PT),np.max(zgrid_PT)])

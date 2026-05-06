@@ -1,17 +1,14 @@
 ###
-# Plot the ray trajectories and damping as predicted by GENRAY
-# since it's a linear code, the damping is very wrong for LH, but the ray trajectory can be useful
+# Plots delpwr for a particular ray across several simulations
+# Liekly only useful if the exact same spectrum is launched
 ###
 
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import argrelextrema
-from matplotlib.collections import LineCollection
-
-import matplotlib
 import os, sys
-from scipy.signal import find_peaks
+import netCDF4
+
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -20,10 +17,7 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-import getGfileDict
 import helperFunctions as helper
-import getInputFileDictionary
-import netCDF4
 
 import getTargetInfo
 targetDir = getTargetInfo.getTargetDir()
@@ -41,61 +35,19 @@ machine = 'DIIID'
 
 if machine == 'DIIID':
 
-    shotNum = '203619.04135'
-
     ray = 10
 
-    stem = f'/home/grantr/symlinks/genray_batch/DIIID_shots/DIIID_{shotNum}'
-    
-    targetDirs =[
-                f'{stem}/gridTests/DIIID_{shotNum}_expSpectrum_1Zeff_cqlHighRes_30000nrelt_0.005prmt6_0.001prmt4',
-                f'{stem}/gridTests/DIIID_{shotNum}_expSpectrum_1Zeff_cqlHighRes_30000nrelt_0.0025prmt6_0.001prmt4',
-                f'{stem}/gridTests/DIIID_{shotNum}_expSpectrum_1Zeff_cqlHighRes_30000nrelt_0.001prmt6_0.001prmt4',
-                f'{stem}/gridTests/DIIID_{shotNum}_expSpectrum_1Zeff_cqlHighRes_30000nrelt_0.0008prmt6_0.001prmt4',
-                ]
-    
+    stem1 = f'/home/grantr/symlinks/genray_batch/DIIID_shots/DIIID_203619.04130/DIIID_203619.04130_expSpectrum_2Zeff/DIIID_203619.04130_expSpectrum_2Zeff_'
+    stem2 = f'/home/grantr/symlinks/genray_batch/DIIID_shots/DIIID_203912.02700/DIIID_203912.02700_expSpectrum_'
+    targetDirs = [f'{stem1}first',
+                  f'{stem2}second',]
+
+
     labels = [
-              'prmt6 = 0.005, prmt4 = 0.001', 
-              'prmt6 = 0.0025, prmt4 = 0.001', 
-              'prmt6 = 0.001, prmt4 = 0.001', 
-              'prmt6 = 0.0008, prmt4 = 0.001', 
+              '203619',
+              '203912' 
               ]
     
-
-    targetDirs =[
-            f'{stem}/gridTests/DIIID_{shotNum}_expSpectrum_1Zeff_cqlHighRes_30000nrelt_0.005prmt6_0.001prmt4',
-            f'{stem}/gridTests/DIIID_{shotNum}_expSpectrum_1Zeff_cqlHighRes_30000nrelt_0.005prmt6_0.0005prmt4',
-            f'{stem}/gridTests/DIIID_{shotNum}_expSpectrum_1Zeff_cqlHighRes_30000nrelt_0.005prmt6_0.0001prmt4',
-            f'{stem}/gridTests/DIIID_{shotNum}_expSpectrum_1Zeff_cqlHighRes_30000nrelt_0.005prmt6_0.00005prmt4',
-            
-            ]
-    
-    labels = [
-              'prmt6 = 0.005, prmt4 = 0.001', 
-              'prmt6 = 0.005, prmt4 = 0.0005', 
-              'prmt6 = 0.005, prmt4 = 0.0001', 
-              'prmt6 = 0.005, prmt4 = 0.00005', 
-              ]
-
-
-elif machine == 'NTPT':
-    shotNum = 'DIIID.147634PT05'
-
-    stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shotNum}'
-
-    targetDirs =[
-                f'{stem}/{machine}_{shotNum}_n2.8Npara_140thgrill_1MW',
-                f'{stem}/{machine}_{shotNum}_n2.8Npara_140thgrill_1MW_highResGenTest',
-                f'{stem}/{machine}_{shotNum}_n2.8Npara_140thgrill_1MW_highResGenTest_101NR',
-                f'{stem}/{machine}_{shotNum}_n2.8Npara_140thgrill_1MW_highResGenTest_51NR',
-                ]
-    
-    labels = ['nrelt = 6000,prmt6 = 0.005,NR=201', 
-              'nrelt = 30000,prmt6 = 0.001,NR=201',
-              'nrelt = 30000,prmt6 = 0.001,NR=101',
-              'nrelt = 30000,prmt6 = 0.001,NR=51',]
-
-#labels = ['Zeff = 1', 'Zeff = 1.25', 'Zeff = 1.3']
 fig,ax = plt.subplots()
 
 #ax.set_title('prmt4 = 0.001, rksteps = 35000')

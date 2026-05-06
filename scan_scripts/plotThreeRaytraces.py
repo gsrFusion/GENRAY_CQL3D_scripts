@@ -1,15 +1,15 @@
+"""
+Plots 3 CQL3D ray trajectories side by side
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from scipy.signal import argrelextrema
 from matplotlib.collections import LineCollection
 import matplotlib
-from scipy.interpolate import interp2d
-import matplotlib
 from matplotlib.path import Path
-
 import os, sys
-from scipy.signal import find_peaks
+import netCDF4
+
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -19,37 +19,27 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 import helperFunctions as helper
 import getGfileDict
-import getInputFileDictionary
-import netCDF4
-#"""
+
 plt.rc('xtick', labelsize = 14)
 plt.rc('ytick', labelsize = 14)
 plt.rc('axes', labelsize = 16)
 plt.rc('axes', titlesize = 16)
 plt.rc('figure', titlesize = 18)
 plt.rc('legend', fontsize = 14)
-#"""
-
 
 def plotRays(ax_pol, targetDir, maxDelPwrPlot):
-    genray_in = getInputFileDictionary.getInputFileDictionary('genray', targetDir = targetDir)
     gfileDict = getGfileDict.getGfileDict(targetDir = targetDir)
     cqlrf_nc = netCDF4.Dataset(f'{targetDir}/cql3d_krf001.nc','r')
 
     xlim = gfileDict["xlim"] #R points of the wall
     ylim = gfileDict["ylim"] #Z points of the wall
-    rbbbs = gfileDict["rbbbs"] #R points of the LCFS
-    zbbbs = gfileDict["zbbbs"] # Z points of the LCFS
-    toroidalAngle = cqlrf_nc.variables["wphi"][:] 
     wr  = cqlrf_nc.variables["wr"][:] #major radius of the ray at each point along the trace
     wz  = cqlrf_nc.variables["wz"][:] #height of the ray at each point along the trace
     delpwr= cqlrf_nc.variables["delpwr"][:] #power in the ray at each point
     wr *= .01; wz*=.01 #convert to m from cm
 
     radialVariable = (np.copy(cqlrf_nc.variables["spsi"]))#radial variable. I think it's rho_pol in my case. Doesn't really matter in this application
-    nparas = cqlrf_nc.variables['wnpar'][:]
     norm = plt.Normalize(0, 1)
-
     
     #plot the ray using a LineCollection which allows the colormap to be applied to each ray
     for ray in range(len(wr)):
@@ -57,7 +47,6 @@ def plotRays(ax_pol, targetDir, maxDelPwrPlot):
         #if not(genray_in['grill'][f'anmax({1})'] >= nparas[ray][0] >= genray_in['grill'][f'anmin({1})']):
         #    continue
 
-        bounceIndex = helper.findBounceIndex(radialVariable[ray],bounceToFind = 1)
         mostPowerDep = helper.findNearestIndex(1 - maxDelPwrPlot, delpwr[ray]/delpwr[ray][0]) #find the index of the last ray point we want to plot
         endingIndex = mostPowerDep#min(bounceIndex,mostPowerDep)
         #if rays are in the forwrad lobe, use them to calcualte first and second pass absorption
@@ -81,7 +70,6 @@ def plotRays(ax_pol, targetDir, maxDelPwrPlot):
     cmap = matplotlib.cm.ScalarMappable(norm = matplotlib.colors.Normalize(0,1),
             cmap = plt.get_cmap('turbo'))
     cmap.set_array([])
-    cticks = np.linspace(0,1,5)
 
     #ax.set_title(f"Plotting Rays until {(maxDelPwrPlot) * 100} %\n ray power deposition")
     ax_pol.set_aspect('equal')
@@ -176,7 +164,7 @@ def main():
 
    
     
-    plt.savefig('190316_nescan.jpeg', dpi=300)
+    #plt.savefig('190316_nescan.jpeg', dpi=300)
     
     plt.show()
 

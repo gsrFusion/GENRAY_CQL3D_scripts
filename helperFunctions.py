@@ -314,10 +314,12 @@ def getLocationOfCurrentDensityPeak(cql_nc):
     return rya[np.argmax(np.abs(curr))]
 
 #draw poloidal flux surfaces
-def drawFluxSurfaces(ax, gfileDict = None, rhosToPlot = [.2,.4,.6,.8,1], 
+def drawFluxSurfaces(ax, targetDir = None, rhosToPlot = [.2,.4,.6,.8,1], 
                      colors = 'k', zBounds = None, limPath = None):
-    if gfileDict == None:
-        gfileDict = getGfileDict.getGfileDict()
+    if targetDir == None:
+        targetDir = getTargetInfo.getTargetDir()
+    
+    gfileDict = getGfileDict.getGfileDict(targetDir=targetDir)
     r = gfileDict["rgrid"]
     z = gfileDict["zgrid"]
     psirz = gfileDict["psirz"]

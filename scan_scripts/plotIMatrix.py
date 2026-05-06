@@ -1,8 +1,11 @@
+"""
+Plots a matrix where the x and y axes designate a simulation run, and the colorbar is the driven current
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import netCDF4
 import os, sys
-import matplotlib
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -30,8 +33,6 @@ os.chdir(dname)
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-import setupInputFiles
-import generateNparaSpectrum
 import netCDF4
 print(f'past imports')
 
@@ -54,34 +55,27 @@ for i in range(len(NPara_fors)):
         prefix = 'p'
 
     stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shot}{time}/twoColorScans/{machine}_{shot}{time}'
-    for j in range(len(NPara_fors)):
+    for j in range(i+1):
         N2 = NPara_fors[j]
-        targetDir = f'{stem}_{prefix}{np.abs(N1)}Npara_{prefix}{np.abs(N2)}Npara_1MW'
+        targetDir = f'{stem}_{prefix}{np.abs(N2)}Npara_{prefix}{np.abs(N1)}Npara_1MW'
 
-        try:
-            print(f'targetDir: {targetDir}')
-            cqlrf_nc = netCDF4.Dataset(f'{targetDir}/cql3d_krf001.nc','r')
-            genray_in = getInputFileDictionary.getInputFileDictionary('genray', targetDir = targetDir)
+        print(f'targetDir: {targetDir}')
+        cqlrf_nc = netCDF4.Dataset(f'{targetDir}/cql3d_krf001.nc','r')
+        genray_in = getInputFileDictionary.getInputFileDictionary('genray_LH', targetDir = targetDir)
 
-            SPA = helper.getSPA(targetDir)[0]
-
-            if SPA < minSPA:
-                Imatrix[i,j] = np.nan
-            else:
-                cql_nc = netCDF4.Dataset(f'{targetDir}/cql3d.nc','r')
-                curr = cql_nc.variables["curr"][-1,:]*1e4/1e6#convert to MA/m^2
-                darea = cql_nc.variables["darea"][:]/1e4#convert to m^2
-                rya = cql_nc.variables["rya"][:]
-                #curr = curr[rya <.95]
-                #darea = darea[rya <.95]
-                totalCD = np.sum(curr*darea)
-
-                Imatrix[i,j] = totalCD
-
-        except Exception as e:
-            print(e)
-            print(f'failed')
+        SPA, _, _ = helper.getSPA(targetDir)
+        if SPA[0] < minSPA:
             Imatrix[i,j] = np.nan
+            Imatrix[j,i] = np.nan
+        else:
+            cql_nc = netCDF4.Dataset(f'{targetDir}/cql3d.nc','r')
+            curr = cql_nc.variables["curr"][-1,:]*1e4/1e6#convert to MA/m^2
+            darea = cql_nc.variables["darea"][:]/1e4#convert to m^2
+            rya = cql_nc.variables["rya"][:]
+            totalCD = np.sum(curr*darea)
+
+            Imatrix[i,j] = totalCD
+            Imatrix[j,i] = totalCD
 
 fig,ax = plt.subplots()
 cmap = 'viridis'
@@ -97,7 +91,6 @@ ax.set_ylabel(r'N$_{||,1}$')
 ax.set_ylabel(r'N$_{||,2}$')
 ax.set_yticks(NPara_fors)
 ax.set_xticks(NPara_fors)
-#ax.set_title(rf'{machine} {shot}{time}, P$_{{LH, for}}$ = 1 MW' + f'\n showing cases for SPA > {minSPA}')
 
 fig.tight_layout()
 plt.show()

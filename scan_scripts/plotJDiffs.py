@@ -1,14 +1,12 @@
 ##
-# Plots the current profiles from a series of simulations
+# Plots the difference in the current density profile between several sets of simulations
 ##
 
 
 import numpy as np
 import matplotlib.pyplot as plt
 import netCDF4
-from scipy.interpolate import interp1d
 import os, sys
-import matplotlib
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -16,9 +14,6 @@ os.chdir(dname)
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-
-import getInputFileDictionary
-import helperFunctions as helper
 
 plt.rc('xtick', labelsize = 14)
 plt.rc('ytick', labelsize = 14)
@@ -31,8 +26,6 @@ import getTargetInfo
 targetDir = getTargetInfo.getTargetDir()
 shotNum = getTargetInfo.getShotNum()
 machine = getTargetInfo.getMachine()
-import shotToEqdsk
-#from omfit_classes import omfit_eqdsk
 
 def plotSPAMatrix():
     machine = 'DIIID'
@@ -62,19 +55,17 @@ def plotSPAMatrix():
             pass
         fig,ax = plt.subplots()
         
-        #fig,ax = plt.subplots(figsize=(5.7,5))
-        
         print(f'starting making scans')
 
         for i,targetDirTuple in enumerate(targetDirs):
-            cql_nc_yesLH = netCDF4.Dataset(f'{targetDirTuple[0]}/cql3d.nc','r')
-            curr_yesLH = cql_nc_yesLH.variables["curr"][-1,:]*1e4/1e6#MA/m^2
-            rya = np.ma.getdata(cql_nc_yesLH.variables["rya"][:])
+            cql_nc_1 = netCDF4.Dataset(f'{targetDirTuple[0]}/cql3d.nc','r')
+            curr_1 = cql_nc_1.variables["curr"][-1,:]*1e4/1e6#MA/m^2
+            rya = np.ma.getdata(cql_nc_1.variables["rya"][:])
 
-            cql_nc_noLH = netCDF4.Dataset(f'{targetDirTuple[1]}/cql3d.nc','r')
-            curr_noLH = cql_nc_noLH.variables["curr"][-1,:]*1e4/1e6#MA/m^2
+            cql_nc_2 = netCDF4.Dataset(f'{targetDirTuple[1]}/cql3d.nc','r')
+            curr_2 = cql_nc_2.variables["curr"][-1,:]*1e4/1e6#MA/m^2
 
-            diff = curr_yesLH - curr_noLH
+            diff = curr_1 - curr_2
 
             ax.plot(rya, diff, lw = 3, label = labels[i], color = colors[i])#label = labels[i], color = colors[i])##r'N$_{||}$' + f' = {NPara_for}')
 

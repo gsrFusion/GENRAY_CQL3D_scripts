@@ -1,8 +1,12 @@
+"""
+Plots a matrix where the x and y axes designate a GENRAY/CQL3D run and the colorbar is the FWHM of the current density profile
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 import netCDF4
 import os, sys
-import matplotlib
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -11,7 +15,6 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-import getInputFileDictionary
 import helperFunctions as helper
 
 plt.rc('xtick', labelsize = 18)
@@ -19,21 +22,6 @@ plt.rc('ytick', labelsize = 18)
 plt.rc('axes', labelsize = 18)
 plt.rc('axes', titlesize = 18)
 plt.rc('legend', fontsize = 14)
-
-
-import numpy as np
-import os, sys
-#these shenanigans relate to vscode not having the working directory as the directory of the file it runs
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-os.chdir(dname)
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-import setupInputFiles
-import generateNparaSpectrum
-import netCDF4
-print(f'past imports')
 
 fakeShot = '.193765NT'
 
@@ -57,8 +45,6 @@ if 'V3A' in fakeShot:
 
 machine = 'NTPT'
 
-#times = ['04525', '02800','04300','04500','04000','03500','03300','02300','03500','03200']
-#shots = ['147634','172550','186514','186651','180758','195081','176878','167502','175273','176034']
 def plotJFWHMMatrix():
     JFWHMMatrix = np.zeros((len(NPara_fors), len(grillHeights)))
 
@@ -69,7 +55,6 @@ def plotJFWHMMatrix():
 
     R_lfs = None
         
-
     for i in range(len(NPara_fors)):
         NPara_for = NPara_fors[i]
         prefix = 'n'
@@ -77,7 +62,6 @@ def plotJFWHMMatrix():
             prefix = 'p'
         stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{fakeMachine}{fakeShot}/{machine}_{fakeMachine}{fakeShot}'
         for j in range(len(grillHeights)):
-            grillHeight = grillHeights[j]
             targetDir = targetDir = f'{stem}_{prefix}{np.abs(NPara_for):.1f}Npara_{grillHeights[j]}grillHeight_{power}MW'
             
             if R_lfs is None:
@@ -95,6 +79,7 @@ def plotJFWHMMatrix():
             else:
                 JFWHMMatrix[i,j] = np.nan
             print(f'width = {JFWHMMatrix[i,j]}')
+
     print(f'min FWHM: {np.nanmin(JFWHMMatrix)}')
     print(f'mean FWHM: {np.nanmean(JFWHMMatrix)}')
     print(f'max FWHM: {np.nanmax(JFWHMMatrix)}')
@@ -102,14 +87,10 @@ def plotJFWHMMatrix():
     p=ax.pcolormesh(grillHeights, NPara_fors, JFWHMMatrix ,shading = 'nearest',cmap='viridis')
     cbar = fig.colorbar(p, ax = ax, shrink = .9, pad = .01)
     cbar.set_label(r'FWHM of J$_{LH}$ ($\rho_{pol}$)')
-    #"""
+    
     ax.set_ylabel(r'$N_{||,LCFS}$')
     ax.set_xlabel(r'Grill vertical location (m)')
-    #ax.set_xlabel(r'Grill poloidal location (deg)')
-    #ax.set_yticks(np.round(powers/1e6,3))
-    #ax.set_xticks(widths)
-    #plt.xticks(rotation=-60)
-    #print(f'timeLabels: {timeLabels}')
+
     ax.set_title(rf'{machine} {fakeMachine}{fakeShot}, P$_{{LH, for}}$ = 1 MW')
 
     fig.tight_layout()

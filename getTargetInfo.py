@@ -1,4 +1,4 @@
-machine = 'DIIID'
+machine = 'NTPT'
 
 if machine == 'FENIX':
     shot = 'PTXPT'
@@ -13,20 +13,20 @@ if machine == 'DIIID':
     shot ='180403'
     timeString = '.04400'
 
-    intermediaryDir = ''#redemption/'#f'ECE_testing/'#3modules/'
+    intermediaryDir = ''
 
     topmostShotDir = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shot}{timeString}'
     targetDir = f'{topmostShotDir}/{intermediaryDir}{machine}_{shot}{timeString}_n2.9Npara_1MW_id2'
     
-    """
+    #"""
     shot ='203912'
     timeString = '.02700'
 
-    intermediaryDir = ''#redemption/'#f'ECE_testing/'#3modules/'
+    intermediaryDir = ''
 
     topmostShotDir = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shot}{timeString}'
     targetDir = f'{topmostShotDir}/{intermediaryDir}{machine}_{shot}{timeString}_expSpectrum_first'
-    """
+    #"""
     """
     shot ='180403'
     timeString = '.04400'

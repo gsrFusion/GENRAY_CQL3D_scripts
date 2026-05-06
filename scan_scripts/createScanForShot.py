@@ -1,3 +1,8 @@
+"""
+This script is used to create a scan over some set of parameters for a given shot.
+"""
+
+
 import numpy as np
 import os, sys
 import matplotlib.pyplot as plt
@@ -12,7 +17,6 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 import setupInputFiles
 import generateNparaSpectrum
-import netCDF4
 import getGfileDict
 import shotToEqdsk
 import helperFunctions as helper
@@ -27,7 +31,7 @@ machine = 'NTPT'
 if machine == 'NTPT':
     time = '.V3APT'
     shot = 'ARC'
-    whatCode = 'both'
+    whatCode = 'both' #what code do we want to run? GENRAY, CQL3D, both, or none?
 
     print(f'starting making scans')
     intermediateDir = 'LFSVersion/'
@@ -56,23 +60,22 @@ if machine == 'NTPT':
     eqdskName = shotToEqdsk.getEqdskName(f'{shot}{time}', machine)
     gfileDict = getGfileDict.getGfileDict(f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shot}{time}/')
 
+    #this block here to to convert my desired launcher height into a poloidal angle
+    #"""
     LCFS_R = gfileDict['rbbbs']
     LCFS_Z = gfileDict['zbbbs']
 
     argmaxZ = np.argmax(LCFS_Z)
     HFS_mask = np.where(LCFS_R <= LCFS_R[argmaxZ])[0]
-    LFS_mask = np.where(LCFS_R >= LCFS_R[argmaxZ])[0]
     HFS_R = LCFS_R[HFS_mask]
     HFS_Z = LCFS_Z[HFS_mask]
 
-    LFS_R = LCFS_R[LFS_mask]
-    LFS_Z = LCFS_Z[LFS_mask]
     Rmaxis = gfileDict['rmaxis']
 
     for j, grillHeight in enumerate(grillHeights):
-        nearestIndex = helper.findNearestIndex(grillHeight, LFS_Z)
-        nearZ = LFS_Z[nearestIndex]
-        nearR = LFS_R[nearestIndex]
+        nearestIndex = helper.findNearestIndex(grillHeight, HFS_Z)
+        nearZ = HFS_Z[nearestIndex]
+        nearR = HFS_R[nearestIndex]
 
         deltaR = nearR - Rmaxis
 
@@ -81,20 +84,8 @@ if machine == 'NTPT':
         thgrills[j] = np.round(deg,3)
 
         print(f'thgrill: {thgrills[j]}')
+    #"""
 
-        fig,ax = plt.subplots()
-        ax.scatter(LFS_R, LFS_Z)
-        ax.scatter([Rmaxis], [0])
-        ax.axhline(-1.75)
-        radius = np.sqrt(nearZ**2 + nearR**2)
-        ax.scatter([np.cos(rad)+Rmaxis],[np.sin(rad)])
-        ax.set_aspect('equal')
-        plt.show()
-
-
-        car = los
-
-        
     for i in range(len(NPara_targets)):
         NPara_target = NPara_targets[i]
         prefix = 'n'
@@ -125,6 +116,7 @@ if machine == 'NTPT':
             pwrScale = pwrscale, N_para_peaks = N_para_peaks,
             )
             helper.copySetupAndClean() 
+            #this runs the code without having to cd into each directory manually
             if whatCode == 'CQL3D':
                 os.system(f'ssh grantr@orcd-vlogin001.mit.edu "cd {targetDir} && bash -s" < /home/grantr/codes/GENRAY_CQL3D_scripts/runCQL.sh {targetDir}')
             elif whatCode == 'both':
@@ -133,70 +125,6 @@ if machine == 'NTPT':
                 os.system(f'ssh grantr@orcd-vlogin001.mit.edu "cd {targetDir} && bash -s" < /home/grantr/codes/GENRAY_CQL3D_scripts/runGEN.sh {targetDir}')
 
 
-if machine == 'FENIX':
-
-    print(f'starting making scans')
-    for i in range(len(NPara_fors)):
-        NPara_for = NPara_fors[i]
-        prefix = 'n'
-        if NPara_for > 0:
-            prefix = 'p'
-
-        """  
-        targetNpara = NPara_for
-        inputTarget = targetNpara
-        
-        if targetNpara > 0:
-            inputTarget *= - 1
-        N_para_peaks, N_para_edges, directivities = generateNparaSpectrum.generateSpectrum(inputTarget, analytic = False, powerRatio = [1,1,1,0,0,0,0,0], doPlot = False)
-        if targetNpara > 0:
-            N_para_peaks = -N_para_peaks
-            N_para_edges = -1*np.flip(N_para_edges,axis = 1)
-
-        for k in range(len(directivities)):
-            if directivities[k]/directivities[0] < .05:
-                directivities = directivities[:k]
-                N_para_peaks = N_para_peaks[:k]
-                N_para_edges = N_para_edges[:k]
-                break
-
-        powerInLobes = directivities*1e6#for 1 MW of forward power
-        """
-        N_para_peaks = np.array([NPara_for])
-        N_para_edges = np.array([[N_para_peaks[0]-.2, N_para_peaks[0] + .2]])
-
-        powerInLobes = np.array([1e6])#for 1 MW of forward power
-        #for j in range(len(thgrills)):
-            #thgrill = thgrills[j]
-        stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shot}{time}/npara_thgrill_scan/{machine}_{shot}{time}'
-        for j in range(len(thgrills)):
-            thgrill = thgrills[j]
-            doPlot = False
-            if i == 0 and j == 0:
-                doPlot = False
-            targetDir = f'{stem}_{prefix}{np.abs(NPara_for):.2f}Npara_{thgrill}thgrill_1MW'#_3modules_{nScales[j]}nScale_{TScales[j]}Tscale'
-            print(f'targetDir: {targetDir}')
-            pwrScale = 1
-            innerGap = 0
-
-            helper = setupInputFiles.InputFileHelper(targetDir,  
-                    waveType = 'LH',
-                    makeDir = True, overwrite = True, doPlot = doPlot,
-                    nScale = 1, TScale = 1, ZeffScale = 1,  
-                    numCQLToFokkerPlanck = 50, ndens = 101, njene= 101,
-                    includeE = False, isScoping = True, eqsym = 'average',
-                    thgrill=thgrill, powerInLobes = powerInLobes,  N_para_edges = N_para_edges, pwrScale = 1, N_para_peaks = N_para_peaks,
-                    )
-            helper.copySetupAndClean() 
-
-
-            if whatCode == 'CQL3D':
-                os.system(f'ssh grantr@eofe7.mit.edu "cd {targetDir} && bash -s" < /home/grantr/codes/GENRAY_CQL3D_scripts/runCQL.sh {targetDir}')
-            elif whatCode == 'both':
-                os.system(f'ssh grantr@eofe7.mit.edu "cd {targetDir} && bash -s" < /home/grantr/codes/GENRAY_CQL3D_scripts/runGENThenCQL.sh {targetDir}')
-            elif whatCode == 'GENRAY':
-                os.system(f'ssh grantr@eofe7.mit.edu "cd {targetDir} && bash -s" < /home/grantr/codes/GENRAY_CQL3D_scripts/runGEN.sh {targetDir}')
-                #"""
 if machine == 'DIIID':
     time = '.05500'
     shot = '193765'
@@ -205,9 +133,6 @@ if machine == 'DIIID':
     print(f'starting making scans')
     intermediateDir = 'Npara_height_scan/'
     stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shot}{time}/{intermediateDir}{machine}_{shot}{time}'
-    #power = 100#kW
-    #100#1000#100#200 #kw
-    #pwrscale = power/1000#/1000
     pwrscale = 1
     NPara_targets = np.array([2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1])
     

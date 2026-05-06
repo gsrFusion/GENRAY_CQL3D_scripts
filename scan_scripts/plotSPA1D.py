@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import netCDF4
 import os, sys
-import matplotlib
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)

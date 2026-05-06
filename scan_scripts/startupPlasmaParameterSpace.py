@@ -1,3 +1,7 @@
+"""
+Some early work looking at which plasmas would make good targets during startup
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -91,4 +95,4 @@ def wplasmaPlot():
     fig.tight_layout()
     plt.show()
 
-wplasmaPlot()
+densityPinjPlot()

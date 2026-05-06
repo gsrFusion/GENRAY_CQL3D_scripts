@@ -1,8 +1,9 @@
-import numpy as np
+###
+# Plots the LCFS of several shots. May be useful to debugging/understanding differences
+###
+
 import matplotlib.pyplot as plt
-import netCDF4
 import os, sys
-import matplotlib
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -23,32 +24,22 @@ plt.rc('legend', fontsize = 14)
 def plotLFCSs():
     
     targetDirs = [
-                '/home/grantr/symlinks/genray_batch/NTPT_shots/NTPT_DIIID.147634PT05Test/NTPT_DIIID.147634PT05Test_n2.8Npara_-0.25grillHeight_1MW',
-                '/home/grantr/symlinks/genray_batch/NTPT_shots/NTPT_DIIID.147634PT05/NTPT_DIIID.147634PT05_n2.8Npara_-0.25grillHeight_1MW',
+                '/home/grantr/symlinks/genray_batch/NTPT_shots/NTPT_DIIID.147634NT/NTPT_DIIID.147634NT_n2.5Npara_-0.5grillHeight_1MW',
+                '/home/grantr/symlinks/genray_batch/NTPT_shots/NTPT_DIIID.147634PT/NTPT_DIIID.147634PT_n2.5Npara_-0.5grillHeight_1MW',
                   ]
 
     fig, ax = plt.subplots(figsize = (5.25,7.1))
     colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
-    #for j in range(len(times)):
-    #for j in range(len(shots)):
     for i,targetDir in enumerate(targetDirs):
-        #shot = shots[j]
-        #time = times[j]
-        #stem = f'/home/grantr/scratch/genray_batch/DIIID_shots/DIIID_{shot}.{time}/{shot}.{time}profiles'
-
-        #targetDir = f'{stem}/DIIID_{shot}.{time}_{shot}.{time}profiles_n{2.7}Npara_300kW'
+       
         print(f'targetDir: {targetDir}')
         gfileDict = getGfileDict.getGfileDict(targetDir = targetDir)
         xlim = gfileDict["xlim"] #R points of the wall
         ylim = gfileDict["ylim"] #Z points of the wall
-        rbbbs = gfileDict["rbbbs"] #R points of the LCFS
-        zbbbs = gfileDict["zbbbs"] # Z points of the LCFS
         ax.plot(xlim, ylim, color = 'r', lw = 2, )#plot wall
         
-        helper.drawFluxSurfaces(ax, gfileDict = gfileDict, rhosToPlot = [.2,.4,.6,.8,1], 
+        helper.drawFluxSurfaces(ax, targetDir = targetDir, rhosToPlot = [.2,.4,.6,.8,1], 
                      colors = colors[i], zBounds = None, limPath = None)
-
-    #ax.legend(loc = 'upper right')
 
     ax.set_aspect('equal')
     ax.set_ylim(min(ylim)*1.05, max(ylim)*1.05)
@@ -56,7 +47,6 @@ def plotLFCSs():
     ax.set_ylabel("Z (m)")
     ax.set_xlabel("R (m)")
 
-    #ax.set_title(rf'Shot {shot}')
     fig.tight_layout()
 
     plt.show()

@@ -1,3 +1,6 @@
+"""
+This is somewhat deprecated, but it gives an example of how one could simulate the same LH settings over a set of plasmas
+"""
 import numpy as np
 import os, sys
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs

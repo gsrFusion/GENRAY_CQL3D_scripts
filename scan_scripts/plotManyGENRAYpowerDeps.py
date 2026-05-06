@@ -1,6 +1,5 @@
 ###
-# Plot the ray trajectories and damping as predicted by GENRAY
-# since it's a linear code, the damping is very wrong for LH, but the ray trajectory can be useful
+# Plot the power deposition profiles predicted by GENRAY for several simulations
 ###
 
 
@@ -43,164 +42,22 @@ if machine == 'DIIID':
     #"""
     shotNum = '203619.04130'
 
-    scanType = 'rhopsi'
+    case = '203619 4130 prmt6 LH scan'
+    if case == '203619 4130 prmt6 LH scan':
+        stem1 = f'/home/grantr/symlinks/genray_batch/DIIID_shots/DIIID_{shotNum}/DIIID_{shotNum}_expSpectrum_2Zeff/DIIID_{shotNum}_expSpectrum_2Zeff'
+        stem2 = f'/home/grantr/symlinks/genray_batch/DIIID_shots/DIIID_{shotNum}/DIIID_{shotNum}_expSpectrum_2Zeff/scans/DIIID_{shotNum}_expSpectrum_2Zeff_second'
+        includeWallRef = True
 
-    if scanType == 'rhopsi':
-        stem = f'/home/grantr/symlinks/genray_batch/DIIID_shots/DIIID_203619.04130/DIIID_203619.04130_expSpectrum_2Zeff'
         targetDirs = [
-            f'{stem}/DIIID_203619.04130_expSpectrum_2Zeff_second',
-            f'{stem}/scans/DIIID_203619.04130_expSpectrum_2Zeff_second_0.99rhopsi0'
+            f'{stem2}_1e-2prmt6LH',
+            f'{stem2}_2.5e-3prmt6LH',
+            f'{stem1}_second',
         ]
-
+        
         labels = [
-            'rhopsi0 = 1',
-            'rhopsi0 = 0.99',
-
-        ]
-
-    if scanType == 'testNewGENRAY':
-        stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shotNum}/numRaysTest/{machine}_{shotNum}_expSpectrum_1Zeff_10000nrelt'
-        targetDirs = [
-            f'{stem}_0.005prmt6_1e-7prmt4_4nthin_39nnkpar_id16newTest',
-            #f'{stem}_0.005prmt6_1e-7prmt4_4nthin_39nnkpar',
-        ]
-
-        labels = [
-            'old Sam genray',
-            'new Sam Genray',
-
-        ]
-    if scanType == 'expSpectrum nnkpar=33 prmt4':
-        stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shotNum}/numRaysTest/{machine}_{shotNum}_expSpectrum_1Zeff_10000nrelt'
-        targetDirs = [
-            f'{stem}_0.005prmt6_0.001prmt4_4nthin_33nnkpar',
-            f'{stem}_0.005prmt6_0.0001prmt4_4nthin_33nnkpar',
-        ]
-
-        labels = [
-            'nthin = 4, nnkpar = 33, prmt4 = 1e-3',
-            'nthin = 4, nnkpar = 33, prmt4 = 1e-4',
-
-        ]
-
-    if scanType == 'expSpectrum nnkpar=30':
-        stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shotNum}/numRaysTest/{machine}_{shotNum}'
-        targetDirs = [
-            f'{stem}_expSpectrum_1Zeff_10000nrelt_0.004prmt6_1e-8prmt4_4nthin_30nnkpar',
-            f'{stem}_expSpectrum_1Zeff_10000nrelt_0.005prmt6_1e-8prmt4_4nthin_35nnkpar',
-            f'{stem}_expSpectrum_1Zeff_10000nrelt_0.0045prmt6_1e-8prmt4_4nthin_35nnkpar',
-            f'{stem}_expSpectrum_1Zeff_10000nrelt_0.005prmt6_1e-8prmt4_4nthin_37nnkpar',
-            #[f'{stem}_expSpectrum_1Zeff_10000nrelt_0.005prmt6_2e-5prmt4_4nthin_39nnkpar'],
-
-        ]
-        labels = [
-            'expSpectrum, Zeff = 1, nthin = 4, nnkpar = 30, prmt4=1e-8, ',
-            'expSpectrum, Zeff = 1, nthin = 4, nnkpar = 35, prmt4=1e-8',
-            'expSpectrum, Zeff = 1, nthin = 4, nnkpar = 35, prmt4=1e-8,prmt6=0.0045',
-            'expSpectrum, Zeff = 1, nthin = 4, nnkpar = 37, prmt4=1e-8',
-        ]
-
-    if scanType == 'expSpectrum nnkpar':
-        stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shotNum}/numRaysTest/{machine}_{shotNum}_expSpectrum_1Zeff_10000nrelt'
-        targetDirs = [
-            f'{stem}_0.005prmt6_0.001prmt4_4nthin_15nnkpar',
-            f'{stem}_0.005prmt6_0.001prmt4_4nthin_20nnkpar',
-            f'{stem}_0.005prmt6_0.001prmt4_4nthin_25nnkpar',
-            f'{stem}_0.005prmt6_0.001prmt4_4nthin_30nnkpar',
-            f'{stem}_0.005prmt6_0.001prmt4_4nthin_33nnkpar',
-        ]
-
-        labels = [
-            'nthin = 4, nnkpar = 15',
-            'nthin = 4, nnkpar = 20',
-            'nthin = 4, nnkpar = 25',
-            'nthin = 4, nnkpar = 30',
-            'nthin = 4, nnkpar = 33',
-
-        ]
-
-    if scanType == 'old prmt4 scan':
-        stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shotNum}/gridTests/{machine}_{shotNum}_1Zeff_30000nrelt'
-        targetDirs = [
-            f'{stem}_0.005prmt6_0.001prmt4',
-            f'{stem}_0.005prmt6_0.0001prmt4',
-            f'{stem}_0.005prmt6_0.00001prmt4',
-            f'{stem}_0.005prmt6_0.000001prmt4',
-            f'{stem}_0.005prmt6_0.0000001prmt4',
-            
-        ]
-
-        labels = [
-            'prmt6 = 0.005, prmt4 = 1e-3',
-            'prmt6 = 0.005, prmt4 = 1e-4',
-            'prmt6 = 0.005, prmt4 = 1e-5',
-            'prmt6 = 0.005, prmt4 = 1e-6',
-            'prmt6 = 0.005, prmt4 = 1e-7',
-
-        ]
-
-    if scanType == 'old prmt6 scan':
-        stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shotNum}/gridTests/{machine}_{shotNum}_1Zeff_30000nrelt'
-        targetDirs = [
-            f'{stem}_0.005prmt6_0.001prmt4',
-            f'{stem}_0.0025prmt6_0.001prmt4',
-            f'{stem}_0.001prmt6_0.001prmt4',
-            f'{stem}_0.0008prmt6_0.001prmt4',
-            
-        ]
-
-        labels = [
-            'prmt6 = 0.005, prmt4 = 0.001',
-            'prmt6 = 0.0025, prmt4 = 0.001',
-            'prmt6 = 0.001, prmt4 = 0.001',
-            'prmt6 = 0.0008, prmt4 = 0.001',
-
-        ]
-
-    if scanType == 'nnkpar':
-        stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shotNum}/numRaysTest/{machine}_{shotNum}_1Zeff_1Lobe_20000nrelt'
-        targetDirs = [
-            #f'{stem}_0.005prmt6_0.001prmt4_4nthin_7nnkpar',
-            f'{stem}_0.005prmt6_0.001prmt4_4nthin_10nnkpar',
-            f'{stem}_0.005prmt6_0.001prmt4_4nthin_15nnkpar',
-            #f'{stem}_0.005prmt6_0.001prmt4_8nthin_15nnkpar',
-            f'{stem}_0.005prmt6_0.001prmt4_4nthin_20nnkpar',
-            f'{stem}_0.005prmt6_0.001prmt4_4nthin_30nnkpar',
-            f'{stem}_0.005prmt6_0.0005prmt4_4nthin_30nnkpar',
-            f'{stem}_0.005prmt6_0.001prmt4_4nthin_35nnkpar',
-            f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shotNum}/numRaysTest/{machine}_{shotNum}_1Zeff_1Lobe_10000nrelt_0.005prmt6_0.001prmt4_4nthin_35nnkpar',
-            
-        ]
-
-        labels = [
-            #'nthin = 4, nnkpar = 7',
-            'nthin = 4, nnkpar = 10, prmt4 = 0.005',
-            'nthin = 4, nnkpar = 15, prmt4 = 0.005',
-            #'nthin = 8, nnkpar = 15',
-            'nthin = 4, nnkpar = 20, prmt4 = 0.005',
-            'nthin = 4, nnkpar = 30, prmt4 = 0.005',
-            'nthin = 4, nnkpar = 30, prmt4 = 0.0005',
-            'nthin = 4, nnkpar = 35, prmt4 = 0.005',
-            'nthin = 4, nnkpar = 35, prmt4 = 0.005, nrelt = 10000',
-
-        ]
-
-    if scanType == 'nthin':
-        stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shotNum}/numRaysTest/{machine}_{shotNum}_1Zeff_1Lobe_20000nrelt_0.005prmt6_0.001prmt4'
-        targetDirs = [
-            f'{stem}_4nthin_7nnkpar',
-            f'{stem}_4nthin_10nnkpar',
-            f'{stem}_8nthin_10nnkpar',
-            f'{stem}_12nthin_10nnkpar',
-            
-        ]
-
-        labels = [
-            'nthin = 4, nnkpar = 7',
-            'nthin = 4, nnkpar = 10',
-            'nthin = 8, nnkpar = 10',
-            'nthin = 12, nnkpar = 10',
-
+            r'prmt6LH = 1e-2',
+            r'prmt6LH = 2.5e-3',
+            r'prmt6LH = 5e-3',
         ]
 
 elif machine == 'NTPT':

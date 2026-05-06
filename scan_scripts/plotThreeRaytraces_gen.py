@@ -1,15 +1,15 @@
+"""
+Plots three GENRAY raytraces side by side
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from scipy.signal import argrelextrema
 from matplotlib.collections import LineCollection
 import matplotlib
-from scipy.interpolate import interp2d
-import matplotlib
 from matplotlib.path import Path
-
+import netCDF4
 import os, sys
-from scipy.signal import find_peaks
+
 #these shenanigans relate to vscode not having the working directory as the directory of the file it runs
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -19,27 +19,20 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 import helperFunctions as helper
 import getGfileDict
-import getInputFileDictionary
-import netCDF4
-#"""
+
 plt.rc('xtick', labelsize = 14)
 plt.rc('ytick', labelsize = 14)
 plt.rc('axes', labelsize = 16)
 plt.rc('axes', titlesize = 16)
 plt.rc('figure', titlesize = 18)
 plt.rc('legend', fontsize = 14)
-#"""
-
 
 def plotRays(ax_pol, targetDir, maxDelPwrPlot):
-    genray_in = getInputFileDictionary.getInputFileDictionary('genray', targetDir = targetDir)
     gfileDict = getGfileDict.getGfileDict(targetDir = targetDir)
     genray_nc = netCDF4.Dataset(f'{targetDir}/genray.nc','r')
 
     xlim = gfileDict["xlim"] #R points of the wall
     ylim = gfileDict["ylim"] #Z points of the wall
-    rbbbs = gfileDict["rbbbs"] #R points of the LCFS
-    zbbbs = gfileDict["zbbbs"] # Z points of the LCFS
     wr  = genray_nc.variables["wr"][:] #major radius of the ray at each point along the trace
     wz  = genray_nc.variables["wz"][:] #height of the ray at each point along the trace
     delpwr= genray_nc.variables["delpwr"][:] #power in the ray at each point
@@ -68,13 +61,8 @@ def plotRays(ax_pol, targetDir, maxDelPwrPlot):
         lc.set_linewidth(2)
         ax_pol.add_collection(lc)
 
-    
-
-    #"""
     avgSPA = helper.getSPA(targetDir)
     print(f'avgSPA: {avgSPA}')
-
-    N_para_launch = (genray_in['grill']['anmax(1)'] + genray_in['grill']['anmin(1)'])/2
 
     cmap = matplotlib.cm.ScalarMappable(norm = matplotlib.colors.Normalize(0,1),
             cmap = plt.get_cmap('turbo'))
@@ -105,13 +93,6 @@ def main():
     #fig = plt.figure(figsize = (10,5.25))
     fig, axs = plt.subplots(1, 3, figsize = (10,5.25))
 
-    #gs = gridspec.GridSpec(1, 4, width_ratios=[1, 1, 1, 0.075], wspace=0.5)
-
-    #ax1 = fig.add_subplot(gs[0])
-    #ax2 = fig.add_subplot(gs[1])
-    #ax3 = fig.add_subplot(gs[2])
-
-    #axs = [ax1, ax2, ax3]
 
     time = '.04135'
     shot = '203619'
@@ -169,9 +150,6 @@ def main():
         bbox.height          # height
     ])
     fig.colorbar(cmap, cax=cax).set_label(r"Fractional power remaining in ray")
-
-   
-    
     
     plt.show()
 
