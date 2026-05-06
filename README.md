@@ -12,8 +12,8 @@ For examples all my runs are located in /home/grantr/scratch/genray_batch/{machi
 
 To choose which simulation the scripts are looking at, modify targetDirectory.py 
 
-I suggest copying the example case in testCase/DIIID_DIIID_180403.04400_n2.8Npara_1MW_frameworkTest to
-  DIIID_shots/DIIID_180403.04400/DIIID_180403.04400_n2.8Npara_1MW_frameworkTest and trying to run it with sbatch genr_sam.pbs, then sbatch cql.pbs
+I suggest copying the example case in testCase/DIIID\_180403.04400\_n2.8Npara\_1MW\_frameworkTest to
+  DIIID\_shots/DIIID\_180403.04400/DIIID\_180403.04400\_n2.8Npara\_1MW\_frameworkTest and trying to run it with sbatch genr_sam.pbs, then sbatch cql.pbs
   You will need to modify these .pbs files to point to your GENRAY and CQL3D executables.
 
 From there, hopefully the scripts just work. If they don't you can send me an email at grantr@psfc.mit.edu
