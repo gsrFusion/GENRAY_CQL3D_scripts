@@ -80,7 +80,7 @@
  prmt1 =  0.0
  prmt2 =  999900.0
  prmt3 =  0.01
- prmt4 =  5e-6
+ prmt4 =  5e-06
  prmt6 =  0.001
  prmt9 =  1000000000000000.0
  icorrect =  1

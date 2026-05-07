@@ -111,7 +111,7 @@ if machine == 'NTPT':
             waveType = 'LH',
             makeDir = True, overwrite = True, doPlot = doPlot,
             numCQLToFokkerPlanck = 50, ndens = 101, njene= 101, 
-            includeE = False, isScoping = True, eqsym = 'average',
+            isScoping = True, eqsym = 'average',
             thgrill=thgrill, powerInLobes = powerInLobes,  N_para_edges = N_para_edges, 
             pwrScale = pwrscale, N_para_peaks = N_para_peaks,
             )
@@ -197,7 +197,7 @@ if machine == 'DIIID':
         directivities = np.array([1])
         #"""
         """
-        N_para_peaks, N_para_edges, directivities,_ = generateNparaSpectrum.generateSpectrum(target_npara = factor*NPara_target,
+        N_para_peaks, N_para_edges, directivities, = generateNparaSpectrum.generateSpectrum(target_npara = factor*NPara_target,
                                                                                                 #modulePhaseShift = (factor*NPara_target+1.63229)/-.22314,
                                                                                                 analytic = True, 
                                                                                                 doPlot = False, 

@@ -1,9 +1,13 @@
 ###
-# This uses the input file templates to generate a new namelist for the target shot
-# the helicon wave type is somewhat depracated and is allowed for DIII-D shots
-# for WEST LH scoping, it takes in a tuple of lobes
-# fot DIII-D LH scoping, it just takes in the peak of the forward spectrum, since the side lobes are all known
-###
+# Let me start by saying this script is a bit of an abomination, and I'm sorry for that
+# That being said, I think it is possible to readily become friends with the abomination
+#
+# This script makes a new directory for the genray/cql runs if needed, moves the eqdsk and namelist file templates there,
+# then uses the eqdsk and profile files to fill in those templates as desired
+#
+# To write to the namelists, it loops through the files and looks for the desired variables and then sets their values
+# There is a python module that does this in a much cleaner way, but I had issues with some variables, so I wrote this instead
+#
 
 
 import numpy as np
@@ -25,31 +29,32 @@ class InputFileHelper:
 
     """
     targetDir
-    waveType -> LH, FW, or EC
+    waveType -> LH, or EC
     makeDir -> if the target dir doesn't exist, make it
     overwrite -> if the target dir exist and there are already input files in it, overwrite them
     doPlot -> plot profiles to see if things are working well
     nScale, TScale , ZeffScale  -> scale factors for n, T, Zeff
     numCQLToFokkerPlanck -> number of surface to run cql at
+    rya -> flux surfaces to Fokker Planck
     ndens, njene -> number of grid points when inputting the density and temperature profiles into GENRAY,CQL3D, respectively
-    includeE -> include the E field in cql3d, advanced feature
     isScoping -> if it's just a scoping run, I reduce the resolution
     eqsym -> How CQL3D should treat the eqdsk, see cql3d helpfile
     OMFIT_nc_derived ->
-    innerGap -> gap between plasma and antenna on HFS. Used to reduce N|| by 1/R
     thgrill -> poloidal location of LH or FW antenna
     powerInLobes -> array (or int) of power in lobe(s)
     N_para_edges -> used for anmin, anmax in genray grill setup
-    pwrScale -> cql3d's power scale, see cql3d helpful
+    pwrScale -> cql3d's power scale, see cql3d helpfile
     N_para_peaks -> center of each LH or FW N|| lobe
+    ecconeParamDict -> if waveType = 'EC', this is used to fill out the eccone namelist section. Barely used so needs to be checked
+    makeIsland -> add a magnetic island 
+    islandParamDict -> dictionary of parameters about the desired island
     """
     def __init__(self, targetDir,  
                  waveType = 'LH',
                  makeDir = True, overwrite = True, doPlot = True,
                  nScale = 1, TScale = 1, ZeffScale = 1,  
                  numCQLToFokkerPlanck = 50, ndens = 51, njene= 51, rya = None,
-                 includeE = False, isScoping = False, eqsym = 'none', OMFIT_nc_derived = None,
-                 innerGap = 0,
+                 isScoping = False, eqsym = 'none', OMFIT_nc_derived = None,
                  thgrill=None, powerInLobes = None,  N_para_edges = None, pwrScale = 1, N_para_peaks = -2.7,
                  frqncy = 4.6e9,
                  ecconeParamDict = None, 
@@ -68,7 +73,6 @@ class InputFileHelper:
         self.TScale = TScale
         self.ZeffScale = ZeffScale
         self.pwrScale = pwrScale
-        self.innerGap = innerGap
         
         self.numCQLToFokkerPlanck = numCQLToFokkerPlanck
         self.ndens = ndens
@@ -78,7 +82,6 @@ class InputFileHelper:
         self.isScoping = isScoping
         self.doPlot = doPlot
         
-        self.includeE = includeE
         self.eqsym = eqsym
         
         self.OMFIT_nc_derived = OMFIT_nc_derived
@@ -90,7 +93,7 @@ class InputFileHelper:
 
         self.numSpecies = -1
 
-        if self.waveType == 'LH' or self.waveType == 'FW':
+        if self.waveType == 'LH':
             self.thgrill = thgrill
             self.N_para_peaks = N_para_peaks
             self.N_para_edges = N_para_edges
@@ -123,8 +126,6 @@ class InputFileHelper:
     #copies the input file templates into the target directory
     #if the target directory does not exist, a new directory will be made if makeDir = true
     #if overwrite = True, any existing input files in the target directory will be overwritten
-    #for DIII-D shots, N_para is a float, the peak of the forward spectrum
-    #for WEST scoping shots, N_para is a tuple, each a peak of the lobe
     def copyInputFileTemplates(self):
         
         #if the target dir doesn't exist, either make one or break
@@ -138,7 +139,15 @@ class InputFileHelper:
         dir_list = os.listdir(self.targetDir)
         if ('cqlinput' in dir_list or 'genray.in' in dir_list) and self.overwrite == False:
             raise Exception('input files already present. Refusing to overwrite')
+        
         else:
+            """
+            For DIII-D cases, since we know what the predicted launched spectrum of the full launcher is for a given peak N|| value,
+            there's the option to just specify the peak N|| value and it will pull the template that has the spectrum already baked in
+            However, this option is somewhat deprecated
+            Suggest always using generateNparaSpectrum.py to create a new spectrum each time
+            This will be required for matching experiment
+            """
             if self.machine == 'DIIID':
                 os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/cqlinput {self.targetDir}/cqlinput')
                 os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_ece.in {self.targetDir}/genray_ece.in')
@@ -147,6 +156,7 @@ class InputFileHelper:
                     os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_{self.N_para_peaks*factor}.in {self.targetDir}/genray.in')
                 else:
                     os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_{len(self.N_para_peaks)}Lobes.in {self.targetDir}/genray.in')
+            
             elif self.machine == 'KSTAR':
                 os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/cqlinput {self.targetDir}/cqlinput')
                 os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_{len(self.N_para_peaks)}Lobes.in {self.targetDir}/genray.in')
@@ -157,16 +167,13 @@ class InputFileHelper:
                     os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_{1}Lobe.in {self.targetDir}/genray.in')
                 else:
                     os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_{len(self.N_para_peaks)}Lobe.in {self.targetDir}/genray.in')
+            
             elif self.machine == 'FENIX':
                 os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/cqlinput {self.targetDir}/cqlinput')
                 if self.waveType == 'LH':
                     os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray.in {self.targetDir}/genray.in')
-                if self.waveType == 'FW':
-                    os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_FW.in {self.targetDir}/genray.in')
                 if self.waveType == 'EC':
                     os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_EC.in {self.targetDir}/genray.in')
-            elif self.machine == 'MANTA':
-                os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_1Lobes.in {self.targetDir}/genray.in')
             
             elif self.machine == 'NTPT':
                 if 'DIIID' in self.shot:
@@ -187,14 +194,15 @@ class InputFileHelper:
                 os.system(f'cp ~/codes/genr_sam.pbs {self.targetDir}/genr_sam.pbs')
                 os.system(f'cp ~/codes/cql_scoping.pbs {self.targetDir}/cql.pbs')
 
-
-                #os.system(f'cp ~/codes/cql_scoping.pbs {self.targetDir}/cql.pbs')
-
-
     #populates the empty input file templates
-    #get the temperature and density profiles and passes them to the methods of populating the genray and cql3d inputs
-    #for DIII-D shots, N_para is a float, the peak of the forward spectrum
-    #for WEST scoping shots, N_para is a tuple, each a peak of the lobe
+    """
+    The basic idea is to first get the profile fit file and make a set of functions that will then be used to produce the profiles on the input grids
+    Each machine has a different type of profile file, so there's a messy set of if statements for each machine type
+    Additionally, not each machine has the same number of species. 
+        For example DIII-D -> electrons, deuterons, carbon
+        ARC -> D, T, e, impurity
+        self.numSpecies takes care of this
+    """
     def populateInputFiles(self):
         if self.machine == 'DIIID':
             self.numSpecies = 3
@@ -255,14 +263,13 @@ class InputFileHelper:
                     T_i = np.copy(self.OMFIT_nc_derived.variables["T_12C6"][0]/1e3)
                     Zeff = np.copy(self.OMFIT_nc_derived.variables['Zeff'][0])
                 except:
-                    print(f'couldnt find everytging in .nc file. Copying electron info into ions')
+                    print(f'couldnt find everything in .nc file. Copying electron info into ions')
                     Zeff = np.ones(len(n_e))*self.ZeffScale
                     
                     n_i = np.copy(n_e)*(6-Zeff)/5
                     n_12C6 = np.copy(n_e)*(Zeff-1)/30
 
                     T_i = np.copy(T_e)
-                    
 
                 neFunc = interp1d(rho_psi, n_e)
                 niFunc = interp1d(rho_psi, n_i)
@@ -321,36 +328,6 @@ class InputFileHelper:
             ni = []
             Ti = []
 
-            """
-            profString = None
-            with open(f'/home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}/{self.shot}_profs') as f:
-                lines = f.readlines()
-                for line in lines:
-                    if 'ne' in line:
-                        profString = 'ne'
-                        continue
-                    elif 'te' in line:
-                        profString = 'te'
-                        continue
-                    elif 'ni' in line:
-                        profString = 'ni'
-                        continue
-                    elif 'ti' in line:
-                        profString = 'ti'
-                        continue
-                    else:
-                        split = list(map(float, line.split()))
-                        if profString == 'ne':
-                            ne.append(split[1]*1e20)
-                            psi_n.append(split[0])
-                        if profString == 'te':
-                            Te.append(split[1])
-                        if profString == 'ni':
-                            ni.append(split[1]*1e20)
-                        if profString == 'ti':
-                            Ti.append(split[1])
-            """
-
             with open(f'/home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}/NE_fit.dat') as ne_file:
                 lines = ne_file.readlines()
                 for o,line in enumerate(lines):
@@ -400,28 +377,6 @@ class InputFileHelper:
             self.nFunctions = [neFunc, niFunc, n12C6Func]
             self.TFunctions = [TeFunc, TiFunc, TiFunc]
 
-        elif self.machine == 'NTPTX':
-            fakeDevice = self.shot.split('.')[0]
-
-            self.numSpecies = 2
-            rho_psi = np.load(f'/home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}/rho_pol_{fakeDevice}.npy','r')
-            n_e = np.load(f'/home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}/ne_{fakeDevice}.npy','r')
-            T_e = np.load(f'/home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}/Te_{fakeDevice}.npy','r')
-
-            n_i = n_e
-            T_i = T_e
-            Zeff = np.ones(len(n_e))
-
-            neFunc = interp1d(rho_psi, n_e, bounds_error = False, fill_value=(np.max(n_e), np.min(n_e)))
-            niFunc = interp1d(rho_psi, n_i, bounds_error = False, fill_value=(np.max(n_i), np.min(n_i)))
-            TeFunc = interp1d(rho_psi, T_e, bounds_error = False, fill_value=(np.max(T_e), np.min(T_e)))
-            TiFunc = interp1d(rho_psi, T_i, bounds_error = False, fill_value=(np.max(T_i), np.min(T_i)))
-            self.ZeffFunc = interp1d(rho_psi, Zeff, bounds_error = False, fill_value=(1,1))
-
-            self.speciesLabels = ['e', 'D']
-            self.nFunctions = [neFunc, niFunc]
-            self.TFunctions = [TeFunc, TiFunc]
-
         elif self.machine == 'WEST':
             self.numSpecies = 3
             rho_psi = np.load(f'/home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}/rho_pol.npy','r')
@@ -464,23 +419,7 @@ class InputFileHelper:
             self.nFunctions = [neFunc, niFunc]
             self.TFunctions = [TeFunc, TiFunc]
 
-        elif self.machine == 'MANTA':
-            self.numSpecies = 3
-            rho_psi = np.load(f'/home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}/rho_pol.npy','r')
-            n_e = np.load(f'/home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}/ne_prof.npy','r')
-            T_e = np.load(f'/home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}/Te_eV_prof.npy','r')/1e3
-            T_i = np.load(f'/home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}/Ti_eV_prof.npy','r')/1e3
-            n_12C6 = np.zeros(len(n_e))
-
-            n_i = n_e
-            Zeff = np.ones(len(n_e))
-            self.neFunc = interp1d(rho_psi, n_e, bounds_error = False, fill_value=(np.max(n_e), np.min(n_e)))
-            self.niFunc = interp1d(rho_psi, n_i, bounds_error = False, fill_value=(np.max(n_i), np.min(n_i)))
-            self.n12C6Func = interp1d(rho_psi, n_12C6, bounds_error = False, fill_value=(0,0))
-            self.TeFunc = interp1d(rho_psi, T_e, bounds_error = False, fill_value=(np.max(T_e), np.min(T_e)))
-            self.TiFunc = interp1d(rho_psi, T_i, bounds_error = False, fill_value=(np.max(T_i), np.min(T_i)))
-            self.ZeffFunc = interp1d(rho_psi, Zeff, bounds_error = False, fill_value=(1,1))
-        
+        #if there's an island, modify the temperature profile
         if self.makeIsland:
             width = self.islandParamDict['width'] #m
             deltaT = self.islandParamDict['deltaT']
@@ -551,7 +490,6 @@ class InputFileHelper:
                 ax.legend(fontsize = 14, ncol=2,framealpha = 1,)
                 fig.tight_layout()
                 plt.show()
-                car = los
             #"""
             T_e = Te_withIsland
 
@@ -567,8 +505,6 @@ class InputFileHelper:
 
             ax.legend(loc = 'best')
             ax.set_xlim([0,1])
-            #ax2.set_ylim([0,10])
-            #ax.set_ylim([0,1e20])
 
             #"""
             plt.show()
@@ -611,22 +547,6 @@ class InputFileHelper:
 
         E_cm = np.zeros(len(ryain))
 
-        #if you want to try to include the effects of the DC field. 
-        #this is rather half-balked
-        if self.includeE:
-            import shotToEfield
-            fieldDict = shotToEfield.getEdict(self.shot, self.machine)
-
-            E_nvloop = fieldDict['E_V']
-            nvloop_rho_pol = fieldDict['rho_pol']
-            E_ryain = interp1d(nvloop_rho_pol, E_nvloop)(ryain)
-            E_cm = E_ryain/100 # convert to V/cm
-            fig,ax = plt.subplots()
-            ax.plot(ryain, E_cm)
-            ax.set_xlabel(r'rho_pol')
-            ax.set_ylabel('E (V/cm)')
-            plt.show()
-
         #convert these variables to string in preparation for adding them to the input files
         ryain_str = str((np.round(ryain,6)).tolist())[1:-1].replace(',','')
         zeffin_str = str((np.round(zeffin,6)).tolist())[1:-1].replace(',','')
@@ -638,7 +558,6 @@ class InputFileHelper:
 
         #WEST and DIII-D have Ip in opposite directions for co-current drive
         #since I have bsign as a function of the sign of Npara, we need this factor
-        machineFactor = 1
         if self.machine == 'WEST' or self.machine == 'FENIX':
             bsign = 1
         if self.machine == 'NTPT':
@@ -693,8 +612,6 @@ class InputFileHelper:
                 cqlData[i] = f' tiin = {tiin_str}\n'
             if 'elecin' in cqlData[i]:
                 cqlData[i] = f' elecin = {E_cm_str}\n'
-            #if 'lrz = ' in cqlData[i]:
-            #    cqlData[i] = f' lrz = {self.numCQLToFokkerPlanck}\n'
             if 'zeffin' in cqlData[i]:
                 cqlData[i] = f' zeffin = {zeffin_str}\n'
             if 'enescal' in cqlData[i]:
@@ -941,7 +858,7 @@ class InputFileHelper:
             if 'frqncy' in genrayData[i]:
                 genrayData[i] = f' frqncy= {self.frqncy}\n'
 
-            if self.waveType == 'LH' or self.waveType == 'FW':
+            if self.waveType == 'LH':
                 #for normal Bt DIIID shots
                 if isinstance(self.N_para_peaks, float) and np.sign(self.N_para_peaks) > 0 and (self.machine == 'DIIID' or self.machine == 'NTPT'):
                     if 'anmax' in genrayData[i]:
@@ -988,21 +905,6 @@ class InputFileHelper:
                     else:
                         genrayData[i] = f'{varName}= {self.thgrill}\n'
 
-                #1/R dependence in the inner gap. Only implemented for DIIID
-                if self.innerGap > 0 and self.machine == 'DIIID':
-                    if 'anmax' in genrayData[i]:
-                        splitInfo = genrayData[i].split('=')
-                        varName = splitInfo[0]
-                        maxNpara = float(splitInfo[1].strip())
-                        newMax = np.round(maxNpara*(1.04/(1.04+self.innerGap)),decimals = 5)
-                        genrayData[i] = f'{varName}= {newMax}\n'
-                    if 'anmin' in genrayData[i]:
-                        splitInfo = genrayData[i].split('=')
-                        varName = splitInfo[0]
-                        minNpara = float(splitInfo[1].strip())
-                        newMin = np.round(minNpara*(1.04/(1.04+self.innerGap)),decimals = 5)
-                        genrayData[i] = f'{varName}= {newMin}\n'
-
             elif self.waveType == 'EC':
                 if 'zst' in genrayData[i]:
                     genrayData[i] = f' zst = {self.zst}\n'
@@ -1022,7 +924,7 @@ class InputFileHelper:
 
             #reduce resolution for scoping
             if self.isScoping:
-                if self.waveType == 'LH' or self.waveType == 'FW':
+                if self.waveType == 'LH':
                     if 'nthin'in genrayData[i]:
                         variableName = genrayData[i].split('=')[0]
                         genrayData[i] = f'{variableName}= 4\n'
@@ -1047,11 +949,8 @@ class InputFileHelper:
         genray_in.writelines(genrayData)  
 
     #clean the eqdsk sitting in the parent shot dir and copy it to the target directory
-    #the cleaning is required due to a weird header line from omfit and my HXR scripts not liking it
+    #an older version of EFIT in OMFIT produced a header with weird characters, so this cleaning fixes that if present
     def cleanAndCopyEQDSK(self):
-
-        #parent dir of the form MACHINE_SHOTNUM.TIME
-        
         shotNumber = self.shot.split('.')[0]
 
         self.eqdskName = shotToEqdsk.getEqdskName(self.shot, self.machine)
@@ -1060,7 +959,7 @@ class InputFileHelper:
             eqdskFile = open(f'/home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}/{self.eqdskName}','r+')
             eqdskData = eqdskFile.readlines()
 
-            if 'b\'' in eqdskData[0]:
+            if 'b\'' in eqdskData[0]: #some DIII-D equilibria had messed up headers
                 original = eqdskData[0]
                 segments = original.split()
                 newData = f'  {segments[1][:-2]}     xx/yy/zzzz    #{shotNumber}  {eqdskTime}ms           {segments[-3]}  {segments[-2]}  {segments[-1]}\n'
@@ -1068,6 +967,7 @@ class InputFileHelper:
                 print(newData)
                 eqdskFile.seek(0)
                 eqdskFile.writelines(eqdskData)
+
         os.system(f'cp /home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}/{self.eqdskName} {self.targetDir}/{self.eqdskName}')
         self.gfileDict = getGfileDict.getGfileDict(f'/home/grantr/symlinks/genray_batch/{self.machine}_shots/{self.parentShotDir}')
 
@@ -1084,80 +984,3 @@ class InputFileHelper:
 
         self.populateInputFiles()
         print('input files populated')
-    
-#see comment above copySetupAndClean for what all the variables are 
-def main():
-    import getTargetInfo
-    import generateNparaSpectrum
-    
-    targetDir = getTargetInfo.getTargetDir()
-    print(f'targetDir: {targetDir}')
-    
-    """
-    targetNpara = -3.4
-    if targetNpara > 0:
-        inputTarget = -targetNpara
-    else:
-        inputTarget = targetNpara
-    N_para_peaks, N_para_edges, directivities = generateNparaSpectrum.generateSpectrum(inputTarget, analytic = False, powerRatio = [1,1,1,1,1,1,1,1], doPlot = False)
-    if targetNpara > 0:
-        N_para_peaks = -N_para_peaks
-        N_para_edges = -1*np.flip(N_para_edges,axis = 1)
-    """
-    """
-    for i in range(len(directivities)):
-        if directivities[i]/directivities[0] < .05:
-            directivities = directivities[:i]
-            N_para_peaks = N_para_peaks[:i]
-            N_para_edges = N_para_edges[:i]
-            break
-    """
-    N_para_peaks = np.array([-2.7])#-2.7
-    N_para_edges = np.array([[N_para_peaks[0]-.2, N_para_peaks[0] + .2]])#None
-
-    powerInLobes = np.array([1e6])#None#directivities*1e6#for 1 MW of forward power
-    thgrill = 190
-
-    oldGap = 0.0757
-    innerGap = 0#oldGap - (1.04-1.016)#in m!!!
-    print(f'innerGap = {innerGap}')
-    pwrScale = 1
-
-    nScale = 1
-    TScale = 1
-
-    doPlot = False
-
-    ecconeParamDict = {'zst':0, 'rst':0.95, 'alfast':180, 'betast':90, 'alpha1':1.7, 'powtot':500e3, 'isX':False}
-
-    """
-    helper = InputFileHelper(targetDir,  
-                 waveType = 'EC',
-                 makeDir = True, overwrite = True, doPlot = doPlot,
-                 nScale = 1, TScale = 1, ZeffScale = 1,  
-                 numCQLToFokkerPlanck = 50, ndens = 101, njene= 101,
-                 includeE = False, isScoping = True, eqsym = 'average',
-                 pwrScale = 1,
-                 frqncy = 220e9,
-                 ecconeParamDict = ecconeParamDict
-                ) 
-    """
-    """
-    helper = InputFileHelper(targetDir,  
-                 waveType = 'LH',
-                 makeDir = True, overwrite = True, doPlot = True,
-                 nScale = 1, TScale = 1, ZeffScale = 1,  
-                 numCQLToFokkerPlanck = 50, ndens = 101, njene= 101,
-                 includeE = False, isScoping = True, eqsym = 'average',
-                 thgrill=thgrill, powerInLobes = powerInLobes,  
-                 N_para_edges = N_para_edges, pwrScale = pwrScale, N_para_peaks = N_para_peaks,
-                 makeIsland = False, islandParamDict={'width':.1, 'deltaT':.1, 'islandq' : 2}
-                )
-    """
-
-
-                        
-    helper.copySetupAndClean()
-
-if __name__ == '__main__':
-    main()

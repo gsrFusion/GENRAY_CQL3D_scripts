@@ -13,8 +13,8 @@ import netCDF4
 import helperFunctions
 print(f'past imports')
 
-time = '.01980'
-shot = '206629'
+time = '.02700'
+shot = '203912'
 machine = 'DIIID'
 whatCode = 'test'
 
@@ -76,12 +76,12 @@ if machine == 'DIIID':
     modulePhases_Andrew_rad = np.pi*modulePhases_Andrew/180
 
     #from the phasing, get the spectrum
-    peakNparas, peakEdges, directivities, P_total = generateNparaSpectrum.generateSpectrum(target_npara=None, #if not supplying the phase shift, what is your target N||
+    peakNparas, peakEdges, directivities = generateNparaSpectrum.generateSpectrum(target_npara=None, #if not supplying the phase shift, what is your target N||
                     modulePhaseShift = modulePhases_Andrew_rad, #RADIANS, if not supplying the target N||, what is the phase shift
                     analytic = False, #if you want to calculate things analytically. Only valid for equal powers in all WGs
                     modulePowerRatio = modulePowers_normed, #power ratios between in the modules
                     #wgPowerRatio = None, # power ratios in the WGs within each module
-                    numLobes = 4,
+                    numLobes = 3,
                     doPlot = 'spectrum',) #whether or not to plot
     
     #may be useful if you want to ignore the reverse lobe
@@ -101,14 +101,15 @@ if machine == 'DIIID':
 
     totalPower_kW = np.sum(modulePowers)
     pwrFactor = 1
+    #This factor of 0.72 is an estimate of the resistive losses between the klystrons and the plasmas
+    #Comes from table 6 of https://doi.org/10.1016/j.fusengdes.2020.111762
     pwrscale = 0.72*totalPower_kW/1000*pwrFactor
     print(f'starting input file helper')
     intermediateDir = ''#'60nnkpar_1e-8prmt4_1e-7prmt4ECE/'
     stem = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shot}{time}/{intermediateDir}{machine}_{shot}{time}'
 
-    targetDir = f'{stem}_expSpectrum'
+    targetDir = f'{stem}_expSpectrum_RaymondTest'
 
-    #jesus christ this shouldn't be legal
     """
     k = 1
     while k < len(directivities):
@@ -142,7 +143,7 @@ if machine == 'DIIID':
         makeDir = True, overwrite = True, doPlot = True,
         nScale = 1, TScale = 1, ZeffScale = 1,  
         numCQLToFokkerPlanck = 50, ndens = 101, njene= 101, 
-        includeE = False, isScoping = False, eqsym = 'average',
+        isScoping = False, eqsym = 'average',
         thgrill=thgrill, powerInLobes = powerInLobes,  N_para_edges = N_para_edges, 
         pwrScale = pwrscale, N_para_peaks = N_para_peaks,
     )

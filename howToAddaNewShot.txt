@@ -10,6 +10,8 @@ Grant's foolproof process of looking at a new timeslice (trademarked)
 3) Add the eqdsk mapping '{shotNum}.{time}':'{eqdskName}' to shotToEqdsk.py
     e.g.: Add '147634.04565':'g147634.04565' to DIIID_eqdskDict
 
-4a) If you're trying to reproduce an experimental spectrum, use exp_scripts/runExperimentalCase.py to take in the phase information and estimate the spectrum
+4) Look at setupInputFiles.py. Modify all the file paths that include 'grantr' to point to where your GENRAY/CQL3D runs will be located
 
-4b) If you're assuming a spectrum, either directly use setupInputFiles.py or use scan_scripts/createScanForShot.py
+5a) If you're trying to reproduce an experimental spectrum, use exp_scripts/runExperimentalCase.py to take in the phase information and estimate the spectrum
+
+5b) If you're assuming a spectrum, either directly use setupInputFiles.py or use scan_scripts/createScanForShot.py

@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numpy import heaviside
 from scipy.signal import find_peaks
-import helperFunctions as helper
-import time
 from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
 
@@ -16,6 +14,20 @@ plt.rc('legend', fontsize = 12)
 
 ###
 # Based off work by Andrew Seltzman
+# see https://iopscience.iop.org/article/10.1088/1741-4326/ab22c8/meta
+#
+# Takes in either a target N|| and outputs what phase is required to produce that value
+# or takes in a set of module phases and outputs the spectrum
+# The Fourier transform can either be done analytically (much faster but requries that all module powers are equal)
+# or numerically (slower but more general)
+#
+# Assumes that the produced N|| is negative. If the field direction means it's positive, just change the sign of the results in whatever script uses the outputs
+#
+# Returns  
+#   peakNparas - the peaks of the N|| lobes
+#   peakEdges - ~the minima on either side of the N|| lobes (only exactly true for symmetrical lobes)
+#   directivities - the directivity of each peak
+
 ###
 
 eps_0 = 8.854187817e-12
@@ -27,36 +39,35 @@ def generateSpectrum(target_npara=None, #if not supplying the phase shift, what 
                     modulePhaseShift = None, #if not supplying the target N||, what is the phase shift between modules
                     analytic = True, #if you want to calculate things analytically. Only valid for equal powers in all WGs
                     modulePowerRatio = None, #power ratios between in the modules
-                    wgPowerRatio = None, # power ratios in the WGs within each module
-                    doPlot = False, #whether or not to plot
+                    doPlot = False, #False -> no plot, 'spectrum' -> plot the spectrum, 'both' -> plot the spectrum and waveguide power+phase
 
                     delta = 0.001/2, #[m], septum width #septa on left and right should only be half a mm
                     w_wg = 0.005, #[m], waveguide width (width here being the horizontal dimension, which is the smaller dimension for LHCD grills)
                     w_spacer = 0.00647, #[m], spacer width between each module
                     num_wg = 6, #number of output waveguides module
-                    num_module = 8, #number of launcher modules):
-                    #[rad/s], phase shift between waveguides ##This is due to how the antenna was designed. Cannot be tuned
-                    delta_phi = np.pi/2,
+                    num_module = 8, #number of launcher modules)
+                    delta_phi = np.pi/2, #[rad/s], phase shift between waveguides ##This is due to how the antenna was designed. Cannot be tuned
                     numLobes = 4, #number of lobes to return data on
 
-                    returnGenrayBestFit = True
+                    #GENRAY does not take in an arbitrary spectrum. Instead it uses basis functions
+                    #if true, returned values produce the best match to the predicted spectrum when fed into GENRAY
+                    returnGenrayBestFit = True 
                     ):
 
+    #unless told otherwise, assume equal power across the modules
     if modulePowerRatio is None:
         modulePowerRatio = np.ones(num_module)
-    if wgPowerRatio is None:
-        wgPowerRatio = np.ones(num_wg)
 
-    modulePowerRatio = np.array(modulePowerRatio)
-    wgPowerRatio = np.array(wgPowerRatio)
+    modulePowerRatio = np.array(modulePowerRatio)#in case it was given as a list
 
-    w_module = num_wg*(delta + w_wg + delta) # each aperture of the module has a septum on either side
-                                             #the outer walls of the module are thus half the thickness of the inner walls
-    w_grill = num_module*w_module + (num_module-1)*w_spacer #spacer between each module
+    #width of a module
+    # each aperture of the module has a septum on either side
+    #the outer walls of the module are thus half the thickness of the inner walls
+    w_module = num_wg*(delta + w_wg + delta) 
+    #width of the full grill
+    w_grill = num_module*w_module + (num_module-1)*w_spacer 
 
-    phi0 = 0 #[rad/s], phase shift of first waveguide
-    #delta_phi = np.pi/2 #[rad/s], phase shift between waveguides ##This is due to how the antenna was designed. Cannot be tuned
-
+    #if the target N|| is specified
     if target_npara is not None and modulePhaseShift == None:
         optActiveWGPhaseShift = -target_npara*w_rf*(w_wg+delta*2)/c #optimal phase shift between active elements in a module
         optModuleWGPhaseShift =  num_wg*optActiveWGPhaseShift  - (target_npara*w_rf*(w_spacer)/c)#optimal phase shift between modules
@@ -69,12 +80,11 @@ def generateSpectrum(target_npara=None, #if not supplying the phase shift, what 
     if analytic:
         assert isinstance(modulePhaseShift, (int, float))
 
-    #delta_phi_module = modulePhaseShift #[rad/s], phase shift between launcher modules
-
     #rectangular function of height 1 and width 1 centered at the origin
     def rect(x):
         return heaviside(x+1/2,.5)-heaviside(x-1/2,.5)
 
+    #x axis for the output of the Fourier transform
     N_paras = np.linspace(-20, 20, int(5e4+1))#needs to be an odd number of points
 
     if doPlot == 'both':
@@ -90,7 +100,6 @@ def generateSpectrum(target_npara=None, #if not supplying the phase shift, what 
         ax.set_xlabel(r'$N_{||}$')
 
     assert len(modulePowerRatio) == num_module
-    assert len(wgPowerRatio) == num_wg
 
     # Create the array of z points
     z_points = 2001
@@ -107,6 +116,7 @@ def generateSpectrum(target_npara=None, #if not supplying the phase shift, what 
     z_module = (num_wg * z_wg + w_spacer)
     # Loop through modules, groups, and waveguides
 
+    #make the phase and electric field arrays across the grill face
     for module_index in range(num_module):
         delta_phi_module = 0
         if isinstance(modulePhaseShift,(int,float)):
@@ -117,15 +127,12 @@ def generateSpectrum(target_npara=None, #if not supplying the phase shift, what 
 
             wg_z_window = rect((z - (module_index * z_module + wg_index * z_wg + w_wg / 2)) / w_wg)
 
-            #E_j = wg_z_window * (powerMatrix[module_index,wg_index])
-
-            E_j = wgPowerRatio[wg_index] * modulePowerRatio[module_index] * wg_z_window  # Electric field at wg
+            E_j = modulePowerRatio[module_index] * wg_z_window  # Electric field at wg
             E_z += E_j
 
-            
-
-            phi_j = (phi0 + wg_index * delta_phi +delta_phi_module) * wg_z_window + np.pi
+            phi_j = (wg_index * delta_phi +delta_phi_module) * wg_z_window + np.pi
             phi_z += phi_j
+
     if doPlot == 'both':
         axes[1].plot(z, E_z)
         phi_ax = axes[1].twinx()
@@ -134,7 +141,8 @@ def generateSpectrum(target_npara=None, #if not supplying the phase shift, what 
         phi_ax.set_ylim([0,360])
         phi_ax.set_yticks([0,90,180,270,360])
 
-    if analytic == True and np.equal(modulePowerRatio,[1]*num_module).all() and np.equal(wgPowerRatio,[1]*num_wg).all():
+    # require requested module powers are all equal to do analytic form
+    if analytic == True and np.equal(modulePowerRatio,[1]*num_module).all():
 
         alpha_active = delta_phi + N_paras*w_rf*(delta + w_wg + delta)/c
 
@@ -198,7 +206,7 @@ def generateSpectrum(target_npara=None, #if not supplying the phase shift, what 
             axes[0].fill_between(N_paras[min1:min2], P_total[min1:min2], np.zeros(len(N_paras[min1:min2])), zorder = 10)  
             axes[0].plot([1,1],[10,10],label = r'$N_{||}$'+ f'= {N_paras[peak]:.2f}, {width:.2f} width \n Directivity = {directivities[i]:.2f}', lw = 5)
         if doPlot == 'spectrum':
-            ax.fill_between(-N_paras[min1:min2], P_total[min1:min2], np.zeros(len(N_paras[min1:min2])), zorder = 10)  
+            ax.fill_between(N_paras[min1:min2], P_total[min1:min2], np.zeros(len(N_paras[min1:min2])), zorder = 10)  
             #ax.plot([1,1],[10,10],label = r'$N_{||}$'+ f'= {N_paras[peak]:.2f}, {width:.2f} width,\n Directivity = {directivities[i]:.2f}', lw = 5)
             ax.plot([1,1],[10,10],label = r'$N_{||}$'+ f'= {-N_paras[peak]:.2f}, \nDirectivity = {directivities[i]:.2f}', lw = 5)
 
@@ -264,29 +272,27 @@ def generateSpectrum(target_npara=None, #if not supplying the phase shift, what 
             print(f'genray peak at {peakNparas[i]:.3f} with width of {width}')
 
 
-    
-
     if doPlot == 'both':
-        #axes[0].plot(N_paras, genrayFit, color = 'lime',lw = 4, zorder = 1, label = 'GENRAY best fit')
+        if returnGenrayBestFit:
+            axes[0].plot(N_paras, genrayFit, color = 'lime',lw = 4, zorder = 1, label = 'GENRAY best fit')
         axes[0].plot(N_paras, P_total, color = 'k',zorder = 1)
         axes[0].set_xlim([-10,10])
-        #axes[0].set_xlim([np.min(N_paras), np.max(N_paras)])
         axes[0].set_ylim([-.05,1.05])
         axes[0].legend()
         fig.tight_layout()
         plt.show()
     if doPlot == 'spectrum':
         #ax.plot(N_paras, genrayFit, color = 'r',lw = 1.5, zorder = 10, label = 'GENRAY spectrum', linestyle = 'dashed')
-        ax.plot(-N_paras, P_total, color = 'k',zorder = 10, lw = 1.25)#, label = 'Experimental spectrum')
+        ax.plot(N_paras, P_total, color = 'k',zorder = 10, lw = 1.25)#, label = 'Experimental spectrum')
         ax.set_xlim([-10,10])
         ax.set_ylim([-.05,1.05])
         ax.legend()
         fig.tight_layout()
-        plt.savefig('DIIID_203912.02700_exSpectrum.jpeg',dpi=300)
+        #plt.savefig('DIIID_203912.02700_exSpectrum.jpeg',dpi=300)
 
         plt.show()
 
-    return peakNparas, peakEdges, directivities, P_total
+    return peakNparas, peakEdges, directivities
 
 def phaseMatrix():
     phases = np.linspace(0,2*np.pi,100)
@@ -316,33 +322,29 @@ def phasePlot():
 
     for i in range(len(phases)):
         phase = phases[i]
-        peaks, _, _,_ = generateSpectrum(modulePhaseShift = phase, num_module = 3)
+        peaks, _, _,_ = generateSpectrum(modulePhaseShift = phase)
         nparas[i] = peaks[0]
 
     #phases = 2*np.pi - phases
     phases = phases%(2*np.pi)
     phases[phases < 1.52] += 2*np.pi
     toFit_phases = np.copy(phases)
-    #toFit_phases[nparas < nparas[0]] -= 2*np.pi
     toFit_npara = np.copy(nparas)
 
     m,b = np.polyfit(toFit_phases, toFit_npara, 1)
     print(f'slope: {m}, intercept: {b}')
-    #ax.scatter(phases,nparas)
     ax.scatter(toFit_phases,toFit_npara)
     ax.plot(phases, m*phases+b)
-    #old: -0.24696, -1.55172)
-    #new: -.24968, -1.603
     plt.show()
 
+#plots the directivity of the DIII-D launcher over a range of N||
 def plotDirectivities():
     targets = np.arange(-3.5,-2,.1)
-
 
     fig,ax = plt.subplots()#figsize= (5.5,4.8))
 
     for target in targets:
-        peakNparas, peakEdges, directivities, P_total = generateSpectrum(target_npara=target, analytic = True, 
+        peakNparas, peakEdges, directivities= generateSpectrum(target_npara=target, analytic = True, 
                                             doPlot = False)
         ax.scatter([np.abs(peakNparas[0])], [directivities[0]], color ='k', marker = 'D')
 
@@ -351,51 +353,12 @@ def plotDirectivities():
     ax.set_ylim([0,1])
     ax.set_xticks([3.5,3.3,3.1,2.9,2.7,2.5,2.3,2.1,1.9])
     fig.tight_layout()
-    plt.savefig('DIIID_8modDirect.jpeg',dpi=300)
+    #plt.savefig('DIIID_8modDirect.jpeg',dpi=300)
 
     plt.show()
 
 if __name__ == '__main__':
-    #generateExperimentalSpectrum()
-    """
-    generateSpectrum(target_npara=-2.7, #if not supplying the phase shift, what is your target N||
-                    analytic = True, #if you want to calculate things analytically. Only valid for equal powers in all WGs
-                    doPlot = 'spectrum', #whether or not to plot
 
-                    #delta = 0.0005/2, #[m], septum width #septa on left and right should only be half a mm
-                    #w_wg = 0.0025, #[m], waveguide width (width here being the horizontal dimension, which is the smaller dimension for LHCD grills)
-                    #w_spacer = 0, #[m], spacer width between each module
-                    #num_wg = 12, #number of output waveguides module
-                    #num_module = 4, #number of launcher modules):
-                    #[rad/s], phase shift between waveguides ##This is due to how the antenna was designed. Cannot be tuned
-                    #delta_phi = np.pi/4,
-                    numLobes = 1, #number of lobes to return data on
-                    )
-    
-    """
-    #testNewWGWidth()
-    #phasePlot()
-    #plotModPowerRatio()
-    #generateWGPowerRatioMatrix()
-    #plotPowerRatioMatrix()
+    generateSpectrum(-2.7, analytic = True, doPlot = 'spectrum', numLobes = 3)
+    generateSpectrum(-2.7, analytic = True, doPlot = 'both', numLobes = 3, returnGenrayBestFit= True)
     #plotDirectivities()
-    #generatePartitionDirectivityMatrix()
-    #plotEffectOfSpacers()
-    #phaseMatrix()
-    """
-    generateSpectrum(#modulePhaseShift = 5.827,
-                    target_npara=-2.7, 
-                    analytic = True, 
-                    #wgPowerRatio = [.5,.75,1,1,.75,.5],
-                    #modulePowerRatio = [1,0,.5,0,.3],
-                    doPlot = 'spectrum', 
-                    num_module=8, 
-                    #num_wg = 6,
-                    #w_wg = 0.005,
-                    #w_spacer=0,#0.005,
-                    #delta = 1e-3/2,
-                    #delta_phi = np.pi/2
-                    )
-    """                
-    #generateSpectrum(modulePhaseShift = 1.32, doPlot = True, analytic = False)
-    generateSpectrum(-2.7, analytic = True, doPlot = 'spectrum', numLobes = 1)
