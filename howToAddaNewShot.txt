@@ -1,5 +1,7 @@
 Grant's foolproof process of looking at a new timeslice (trademarked)
 
+0) Look at setupInputFiles.py. Modify all the file paths that include 'grantr' to point to where your GENRAY/CQL3D runs will be located
+
 1) Create the folder {machine}_shots/{machine}_{shotNum}.{time}
     e.g.: DIIID_shots/DIIID_147634.04565
 
@@ -7,11 +9,12 @@ Grant's foolproof process of looking at a new timeslice (trademarked)
     For DIII-D shots, the scripts expect the profile information to be the derived fits output from OMFIT_PROFILES
     If your profiles are stored differently, setupInputFiles.py will need to be modified
 
+2.1) If you're going to use the ECE module, you probably need to add a recessed port from which to launch the ECE rays
+    Use exp_scripts/addRecessedPort.py to do so
+
 3) Add the eqdsk mapping '{shotNum}.{time}':'{eqdskName}' to shotToEqdsk.py
     e.g.: Add '147634.04565':'g147634.04565' to DIIID_eqdskDict
 
-4) Look at setupInputFiles.py. Modify all the file paths that include 'grantr' to point to where your GENRAY/CQL3D runs will be located
+4a) If you're trying to reproduce an experimental spectrum, use exp_scripts/runExperimentalCase.py to take in the phase information and estimate the spectrum
 
-5a) If you're trying to reproduce an experimental spectrum, use exp_scripts/runExperimentalCase.py to take in the phase information and estimate the spectrum
-
-5b) If you're assuming a spectrum, either directly use setupInputFiles.py or use scan_scripts/createScanForShot.py
+4b) If you're assuming a spectrum, either directly use setupInputFiles.py or use scan_scripts/createScanForShot.py

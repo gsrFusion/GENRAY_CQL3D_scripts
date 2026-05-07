@@ -1,4 +1,4 @@
-machine = 'NTPT'
+machine = 'DIIID'
 
 if machine == 'FENIX':
     shot = 'PTXPT'
@@ -25,7 +25,7 @@ if machine == 'DIIID':
     intermediaryDir = ''
 
     topmostShotDir = f'/home/grantr/symlinks/genray_batch/{machine}_shots/{machine}_{shot}{timeString}'
-    targetDir = f'{topmostShotDir}/{intermediaryDir}{machine}_{shot}{timeString}_expSpectrum_first'
+    targetDir = f'{topmostShotDir}/{intermediaryDir}{machine}_{shot}{timeString}_expSpectrum_RaymondTest'
     #"""
     """
     shot ='180403'
