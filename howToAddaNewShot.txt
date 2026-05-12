@@ -1,6 +1,10 @@
 Grant's foolproof process of looking at a new timeslice (trademarked)
 
-0) Look at setupInputFiles.py. Modify all the file paths that include 'grantr' to point to where your GENRAY/CQL3D runs will be located
+0) Look at setupInputFiles.py. Modify the GENRAY_CQL3D_scriptsLocation variable to point to where your GENRAY_CQL3D_scripts directory is located
+
+0.1) The lines like os.system(f'cp ~/codes/genr_yuri.pbs {self.targetDir}') also need to be modified
+    These copy the scripts to run GENRAY/CQL3D into the directory that setupInputFiles.py will create
+    Change ~/codes/genr_yuri.pbs to point to wherever your scripts are located
 
 1) Create the folder {machine}_shots/{machine}_{shotNum}.{time}
     e.g.: DIIID_shots/DIIID_147634.04565

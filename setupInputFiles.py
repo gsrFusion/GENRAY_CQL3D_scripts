@@ -9,6 +9,7 @@
 # There is a python module that does this in a much cleaner way, but I had issues with some variables, so I wrote this instead
 #
 
+GENRAY_CQL3D_scriptsLocation = f'/home/grantr/codes/GENRAY_CQL3D_scripts'
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -149,44 +150,46 @@ class InputFileHelper:
             This will be required for matching experiment
             """
             if self.machine == 'DIIID':
-                os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/cqlinput {self.targetDir}/cqlinput')
-                os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_ece.in {self.targetDir}/genray_ece.in')
+                os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/{self.machine}_templates/cqlinput {self.targetDir}/cqlinput')
+                os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/{self.machine}_templates/genray_ece.in {self.targetDir}/genray_ece.in')
                 if isinstance(self.N_para_peaks, float):
                     factor = -1*np.sign(self.N_para_peaks)
-                    os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_{self.N_para_peaks*factor}.in {self.targetDir}/genray.in')
+                    os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/{self.machine}_templates/genray_{self.N_para_peaks*factor}.in {self.targetDir}/genray.in')
                 else:
-                    os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_{len(self.N_para_peaks)}Lobes.in {self.targetDir}/genray.in')
+                    os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/{self.machine}_templates/genray_{len(self.N_para_peaks)}Lobes.in {self.targetDir}/genray.in')
             
             elif self.machine == 'KSTAR':
-                os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/cqlinput {self.targetDir}/cqlinput')
-                os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_{len(self.N_para_peaks)}Lobes.in {self.targetDir}/genray.in')
+                os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/{self.machine}_templates/cqlinput {self.targetDir}/cqlinput')
+                os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/{self.machine}_templates/genray_{len(self.N_para_peaks)}Lobes.in {self.targetDir}/genray.in')
 
             elif self.machine == 'WEST':
-                os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/cqlinput {self.targetDir}/cqlinput')
+                os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/{self.machine}_templates/cqlinput {self.targetDir}/cqlinput')
                 if isinstance(self.N_para_peaks, float):
-                    os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_{1}Lobe.in {self.targetDir}/genray.in')
+                    os.system(f'cp {GENRAY_CQL3D_scriptsLocation}s/templates/{self.machine}_templates/genray_{1}Lobe.in {self.targetDir}/genray.in')
                 else:
-                    os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_{len(self.N_para_peaks)}Lobe.in {self.targetDir}/genray.in')
+                    os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/{self.machine}_templates/genray_{len(self.N_para_peaks)}Lobe.in {self.targetDir}/genray.in')
             
             elif self.machine == 'FENIX':
-                os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/cqlinput {self.targetDir}/cqlinput')
+                os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/{self.machine}_templates/cqlinput {self.targetDir}/cqlinput')
                 if self.waveType == 'LH':
-                    os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray.in {self.targetDir}/genray.in')
+                    os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/{self.machine}_templates/genray.in {self.targetDir}/genray.in')
                 if self.waveType == 'EC':
-                    os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/{self.machine}_templates/genray_EC.in {self.targetDir}/genray.in')
+                    os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/{self.machine}_templates/genray_EC.in {self.targetDir}/genray.in')
             
             elif self.machine == 'NTPT':
                 if 'DIIID' in self.shot:
-                    os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/DIIID_templates/cqlinput {self.targetDir}/cqlinput')
-                    os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/DIIID_templates/genray_1Lobes.in {self.targetDir}/genray.in')
+                    os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/DIIID_templates/cqlinput {self.targetDir}/cqlinput')
+                    os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/DIIID_templates/genray_1Lobes.in {self.targetDir}/genray.in')
                 elif 'ARC' in self.shot:
-                    os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/NTPT_templates/cqlinput_ARC {self.targetDir}/cqlinput')
-                    os.system(f'cp /home/grantr/codes/GENRAY_CQL3D_scripts/templates/NTPT_templates/genray_1Lobes_ARC.in {self.targetDir}/genray.in')
+                    os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/NTPT_templates/cqlinput_ARC {self.targetDir}/cqlinput')
+                    os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/templates/NTPT_templates/genray_1Lobes_ARC.in {self.targetDir}/genray.in')
 
             #copy in the files to run GENRAY/CQL3D
             os.system(f'cp ~/codes/genr_yuri.pbs {self.targetDir}')
-            os.system(f'cp ~/codes/GENRAY_CQL3D_scripts/runGENThenCQL.sh {self.targetDir}')
-            os.system(f'cp ~/codes/GENRAY_CQL3D_scripts/runECE.sh {self.targetDir}')
+            os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/runGENThenCQL.sh {self.targetDir}')
+            os.system(f'cp {GENRAY_CQL3D_scriptsLocation}/runECE.sh {self.targetDir}')
+            #if you want to optionally have two sets of scripts for whether a run will be computationally intensive
+            #if you don't want this option, just have one set of these copying commands
             if self.isScoping == False:
                 os.system(f'cp ~/codes/cql.pbs {self.targetDir}/cql.pbs')
                 os.system(f'cp ~/codes/genr_sam_beefy.pbs {self.targetDir}/genr_sam.pbs')
@@ -512,6 +515,7 @@ class InputFileHelper:
             fig, ax = plt.subplots()
             ax.plot(rho_psi, Zeff, color = 'k')
             ax.set_xlim([0,1])
+            ax.set_ylabel('Zeff')
             #"""
             plt.show()
 
