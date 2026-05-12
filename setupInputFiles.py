@@ -64,7 +64,9 @@ class InputFileHelper:
 
         self.targetDir = targetDir
         targetSplit = targetDir.split('/')
-        self.parentShotDir = targetSplit[6]
+        #directory after the first directory with 'shots' in the name
+        idx = next(p for p, s in enumerate(targetSplit) if "shots" in s)
+        self.parentShotDir = targetSplit[idx + 1]
         self.shot = self.parentShotDir.split('_')[1]
         self.machine = self.parentShotDir.split('_')[0]
         self.makeDir = makeDir

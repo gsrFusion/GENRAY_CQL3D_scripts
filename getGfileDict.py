@@ -159,7 +159,10 @@ def getGfileDict(targetDir = None):
 
     else:
         targetSplit = targetDir.split('/')
-        parentShotDir = targetSplit[6]
+        #directory after the first directory with 'shots' in the name
+        idx = next(p for p, s in enumerate(targetSplit) if "shots" in s)
+        parentShotDir = targetSplit[idx + 1]
+
         machine = parentShotDir.split('_')[0]
         
         shot = parentShotDir.split('_')[1]

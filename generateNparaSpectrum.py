@@ -208,7 +208,7 @@ def generateSpectrum(target_npara=None, #if not supplying the phase shift, what 
         if doPlot == 'spectrum':
             ax.fill_between(N_paras[min1:min2], P_total[min1:min2], np.zeros(len(N_paras[min1:min2])), zorder = 10)  
             #ax.plot([1,1],[10,10],label = r'$N_{||}$'+ f'= {N_paras[peak]:.2f}, {width:.2f} width,\n Directivity = {directivities[i]:.2f}', lw = 5)
-            ax.plot([1,1],[10,10],label = r'$N_{||}$'+ f'= {-N_paras[peak]:.2f}, \nDirectivity = {directivities[i]:.2f}', lw = 5)
+            ax.plot([1,1],[10,10],label = r'$N_{||}$'+ f'= {N_paras[peak]:.2f}, \nDirectivity = {directivities[i]:.2f}', lw = 5)
 
         print(f'peak at {peakNparas[i]:.3f} with {directivities[i]} directivity and a width of {width}')
 
